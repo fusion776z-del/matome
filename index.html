@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>今日の注目TOP10（日本）— 要約</title>
+  <title>今日の注目TOP10（日本）— AI要約（Copilot）</title>
   <style>
     :root{
       --bg:#0b1220; --panel:#111a2e; --text:#e8eeff; --muted:#9fb0d0;
@@ -33,14 +33,11 @@
       border:1px solid var(--line); background:rgba(255,255,255,.05);
       padding:8px 10px; border-radius:999px; color:var(--muted); font-size:12px;
     }
-
     .topbar{
       display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
       margin: 10px 0 14px;
     }
-    .hint{
-      color:var(--muted); font-size:12px; line-height:1.55;
-    }
+    .hint{ color:var(--muted); font-size:12px; line-height:1.55; }
     .btn{
       border:1px solid var(--line);
       background: rgba(255,255,255,.06);
@@ -58,13 +55,9 @@
       background: linear-gradient(135deg, rgba(110,168,255,.22), rgba(138,92,255,.20));
     }
     .btn.small{padding:7px 10px;border-radius:12px;font-size:12px}
-    .btn.ok{border-color: rgba(45,212,191,.55); background: rgba(45,212,191,.13)}
     .btn.warn{border-color: rgba(251,191,36,.55); background: rgba(251,191,36,.12)}
-    .btn.bad{border-color: rgba(251,113,133,.55); background: rgba(251,113,133,.12)}
-
-    .grid{
-      display:grid; grid-template-columns: repeat(2, 1fr); gap:12px;
-    }
+    .btn.ok{border-color: rgba(45,212,191,.55); background: rgba(45,212,191,.13)}
+    .grid{ display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; }
     @media (max-width: 900px){ .grid{grid-template-columns:1fr} }
 
     .card{
@@ -91,20 +84,10 @@
       font-weight:800;
       flex:0 0 auto;
     }
-    .topic{
-      margin:0;
-      font-size:16px;
-      font-weight:800;
-      line-height:1.35;
-      word-break:break-word;
-    }
-    .meta{
-      color:var(--muted); font-size:12px; margin-top:4px;
-    }
-    .actions{
-      display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;
-      flex:0 0 auto;
-    }
+    .topic{ margin:0; font-size:16px; font-weight:800; line-height:1.35; word-break:break-word; }
+    .meta{ color:var(--muted); font-size:12px; margin-top:4px; }
+    .actions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; flex:0 0 auto; }
+
     .summary{
       border:1px solid var(--line);
       background: rgba(255,255,255,.03);
@@ -113,8 +96,8 @@
       display:none;
     }
     .summary .label{
-      font-size:12px; color:var(--muted); display:flex; justify-content:space-between; gap:10px;
-      align-items:center;
+      font-size:12px; color:var(--muted);
+      display:flex; justify-content:space-between; gap:10px; align-items:center;
       margin-bottom:6px;
     }
     .summary .text{
@@ -122,12 +105,32 @@
       white-space:pre-wrap;
     }
     .mono{font-family:var(--mono)}
-    a.link{
-      color: var(--brand);
-      text-decoration:none;
-    }
+    a.link{ color: var(--brand); text-decoration:none; }
     a.link:hover{text-decoration:underline}
 
+    .settings{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      border-radius: 16px;
+      padding: 12px;
+      margin: 12px 0;
+    }
+    .settings-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width: 900px){ .settings-grid{grid-template-columns:1fr} }
+    input, textarea{
+      width:100%;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      border-radius: 14px;
+      padding: 10px 12px;
+      outline:none;
+    }
+    textarea{min-height:92px; resize:vertical}
     .toast{
       position:fixed; right:18px; bottom:18px;
       background: rgba(17,26,46,.92);
@@ -137,8 +140,9 @@
       box-shadow: var(--shadow);
       color: var(--text);
       display:none;
-      max-width: 360px;
+      max-width: 420px;
       font-size:13px;
+      z-index: 999;
     }
   </style>
 </head>
@@ -146,10 +150,10 @@
   <div class="wrap">
     <header>
       <div>
-        <h1>今日の注目TOP10（日本）— 要約</h1>
+        <h1>今日の注目TOP10（日本）— AI要約（Copilot）</h1>
         <div class="sub">
-          ボタンを押すと、そのトピックを <strong>Wikipedia（日本語）の要約</strong>として表示します（自分用）。<br/>
-          出典のランキングは「Googleトレンドワードランキング」（2026/04/23 01:45 更新）上位10件。
+          「AI要約（Copilot）」を押すと、Googleニュース検索RSSの見出し一覧を材料に
+          Microsoft 365 Copilot Chat API（プレビュー）で要約します。[4](https://zenn.dev/nuinui/articles/dd65428326799e)[2](https://qiita.com/Biwakonosoko/items/6081d2ceef6476407cea)[3](https://docs.github.com/)
         </div>
       </div>
       <div class="badge">
@@ -157,14 +161,45 @@
       </div>
     </header>
 
-    <div class="topbar">
-      <div class="hint">
-        ・要約は Wikipedia のリード文（概要）を取得します。見つからない場合は「該当なし」になります。<br/>
-        ・一度取得した要約はブラウザ内にキャッシュ（localStorage）します。
+    <div class="settings">
+      <div class="topbar">
+        <div class="hint">
+          ・AI要約は Microsoft Graph 経由の Copilot Chat API（プレビュー）を使います。[2](https://qiita.com/Biwakonosoko/items/6081d2ceef6476407cea)<br/>
+          ・サインイン（Entra ID）が必要です（APIキー不要）。<br/>
+          ・要約材料は Googleニュース検索RSS（見出し）です。[4](https://zenn.dev/nuinui/articles/dd65428326799e)
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn small primary" id="btnSignIn">サインイン</button>
+          <button class="btn small" id="btnSignOut">サインアウト</button>
+          <button class="btn small warn" id="btnClearCache">要約キャッシュ削除</button>
+        </div>
       </div>
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <button class="btn small warn" id="btnClearCache">要約キャッシュ削除</button>
-        <button class="btn small" id="btnOpenSource">ランキング出典を開く</button>
+
+      <div class="settings-grid">
+        <div>
+          <div class="sub" style="margin:0 0 6px;">CLIENT_ID（Entraアプリ）</div>
+          <input id="clientId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+        </div>
+        <div>
+          <div class="sub" style="margin:0 0 6px;">TENANT_ID（ディレクトリ）</div>
+          <input id="tenantId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+        </div>
+        <div>
+          <div class="sub" style="margin:0 0 6px;">Scopes（カンマ区切り）</div>
+          <input id="scopes" value="User.Read" />
+          <div class="hint" style="margin-top:6px;">
+            ※必要な権限はテナント設定次第です。例として会話作成→送信の形は <span class="mono">/beta/copilot/conversations</span> を使う例が公開されています。[3](https://docs.github.com/)
+          </div>
+        </div>
+        <div>
+          <div class="sub" style="margin:0 0 6px;">サインイン状態</div>
+          <div class="badge" id="who">未サインイン</div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <div class="sub" style="margin:0 0 6px;">要約プロンプト</div>
+        <textarea id="prompt"></textarea>
       </div>
     </div>
 
@@ -173,199 +208,357 @@
     <div class="toast" id="toast"></div>
   </div>
 
-<script>
-(() => {
-  // 出典: トレンドカレンダー「Googleトレンドワードランキング」(2026/04/23 01:45 更新) 上位10件
-  // https://jp.trend-calendar.com/
-  const SOURCE_URL = "https://jp.trend-calendar.com/";
-  const SOURCE_UPDATED = "2026-04-23 01:45";
+  <!-- MSAL (ブラウザ) -->
+  <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.20.0/lib/msal-browser.min.js"></script>
 
-  const TOPICS = [
-    { rank: 1, word: "サンリオ ボンボンドロップシール" },
-    { rank: 2, word: "失点" },
-    { rank: 3, word: "日ハム" },
-    { rank: 4, word: "阪神" },
-    { rank: 5, word: "ボートレースびわこ" },
-    { rank: 6, word: "池上彰" },
-    { rank: 7, word: "紀伊國屋書店" },
-    { rank: 8, word: "プロ野球 順位" },
-    { rank: 9, word: "ios 27" },
-    { rank:10, word: "八村塁" }
-  ];
+  <script>
+  (() => {
+    // 出典: トレンドカレンダー「Googleトレンドワードランキング」(2026/04/23 01:45 更新) 上位10件
+    // https://jp.trend-calendar.com/
+    const SOURCE_URL = "https://jp.trend-calendar.com/";
+    const SOURCE_UPDATED = "2026-04-23 01:45";
 
-  const CACHE_KEY = "topic-summary-cache.v1"; // { "<topic>": {ts, title, extract, url} }
-  const grid = document.getElementById("grid");
-  const toastEl = document.getElementById("toast");
+    const TOPICS = [
+      { rank: 1, word: "サンリオ ボンボンドロップシール" },
+      { rank: 2, word: "失点" },
+      { rank: 3, word: "日ハム" },
+      { rank: 4, word: "阪神" },
+      { rank: 5, word: "ボートレースびわこ" },
+      { rank: 6, word: "池上彰" },
+      { rank: 7, word: "紀伊國屋書店" },
+      { rank: 8, word: "プロ野球 順位" },
+      { rank: 9, word: "ios 27" },
+      { rank:10, word: "八村塁" }
+    ];
 
-  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-  const esc = (s) => String(s)
-    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    const CACHE_KEY = "topic-ai-summary-cache.v1"; // { "<topic>": {ts, summary, headlines} }
+    const SETTINGS_KEY = "copilot-ai-summary-settings.v1";
 
-  function toast(msg){
-    toastEl.textContent = msg;
-    toastEl.style.display = "block";
-    clearTimeout(toastEl._t);
-    toastEl._t = setTimeout(()=> toastEl.style.display="none", 2200);
-  }
+    const grid = document.getElementById("grid");
+    const toastEl = document.getElementById("toast");
+    const whoEl = document.getElementById("who");
 
-  function loadCache(){
-    try{
-      const raw = localStorage.getItem(CACHE_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch { return {}; }
-  }
-  function saveCache(cache){
-    try{
-      localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-      return true;
-    } catch { return false; }
-  }
+    const $ = (id) => document.getElementById(id);
 
-  // Wikipedia REST search → best match title を得て → summary を取得
-  async function fetchWikiSummary(query){
-    // 1) タイトル検索（最上位1件）
-    const searchUrl = `https://ja.wikipedia.org/w/rest.php/v1/search/title?q=${encodeURIComponent(query)}&limit=1`;
-    const sRes = await fetch(searchUrl, { headers: { "accept": "application/json" } });
-    if(!sRes.ok) throw new Error("search_failed");
-    const sJson = await sRes.json();
-    const first = (sJson && sJson.pages && sJson.pages[0]) ? sJson.pages[0] : null;
-    if(!first || !first.title) return { found:false, reason:"not_found" };
+    const escHtml = (s) => String(s)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
 
-    const title = first.title;
-    // 2) サマリー取得
-    const sumUrl = `https://ja.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replaceAll(" ", "_"))}`;
-    const dRes = await fetch(sumUrl, { headers: { "accept": "application/json" } });
-    if(!dRes.ok) throw new Error("summary_failed");
-    const dJson = await dRes.json();
+    function toast(msg){
+      toastEl.textContent = msg;
+      toastEl.style.display = "block";
+      clearTimeout(toastEl._t);
+      toastEl._t = setTimeout(()=> toastEl.style.display="none", 2200);
+    }
 
-    const extract = dJson.extract || "";
-    const pageUrl = (dJson.content_urls && dJson.content_urls.desktop && dJson.content_urls.desktop.page) || `https://ja.wikipedia.org/wiki/${encodeURIComponent(title.replaceAll(" ", "_"))}`;
+    function loadJson(key, fallback){
+      try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+      catch{ return fallback; }
+    }
+    function saveJson(key, obj){
+      try{ localStorage.setItem(key, JSON.stringify(obj)); return true; }
+      catch{ return false; }
+    }
 
-    if(!extract) return { found:false, reason:"no_extract", title, url: pageUrl };
-    return { found:true, title, extract, url: pageUrl };
-  }
+    function defaultPrompt(){
+      return [
+        "あなたはニュース編集者です。",
+        "以下の「見出し一覧」だけを根拠に、トピックが何で注目されているかを日本語で要約してください。",
+        "",
+        "出力ルール:",
+        "1) まず120〜200字で全体要約（断定しすぎず、見出しから分かる範囲）",
+        "2) 次に重要ポイントを3つ（箇条書き）",
+        "3) 最後に『追うべき追加キーワード』を3つ（箇条書き）",
+        "",
+        "制約:",
+        "- 見出しに無い事実を作らない",
+        "- 不明は「不明」「要確認」",
+      ].join("\n");
+    }
 
-  function createCard(t){
-    const card = document.createElement("section");
-    card.className = "card";
-    card.dataset.topic = t.word;
+    function loadSettings(){
+      const s = loadJson(SETTINGS_KEY, {});
+      $("clientId").value = s.clientId || "";
+      $("tenantId").value = s.tenantId || "";
+      $("scopes").value = s.scopes || "User.Read";
+      $("prompt").value = s.prompt || defaultPrompt();
+    }
+    function saveSettings(){
+      const s = {
+        clientId: $("clientId").value.trim(),
+        tenantId: $("tenantId").value.trim(),
+        scopes: $("scopes").value.trim(),
+        prompt: $("prompt").value
+      };
+      saveJson(SETTINGS_KEY, s);
+    }
 
-    card.innerHTML = `
-      <div class="head">
-        <div class="left">
-          <div class="rank">${t.rank}</div>
-          <div style="min-width:0">
-            <p class="topic">${esc(t.word)}</p>
-            <div class="meta">ランキング更新: <span class="mono">${esc(SOURCE_UPDATED)}</span></div>
+    // ---- Google News Search RSS URL (見出し収集) ----
+    // 形式例: https://news.google.com/news/rss/search/section/q/<keyword>?hl=ja&gl=JP&ned=jp
+    function googleNewsSearchRssUrl(q){
+      return `https://news.google.com/news/rss/search/section/q/${encodeURIComponent(q)}?hl=ja&gl=JP&ned=jp`;
+    }
+
+    async function fetchRssHeadlines(topic, limit=8){
+      const url = googleNewsSearchRssUrl(topic);
+      const res = await fetch(url, { headers: { "accept": "application/rss+xml, application/xml;q=0.9, */*;q=0.8" }});
+      if(!res.ok) throw new Error("rss_fetch_failed");
+      const xmlText = await res.text();
+      const doc = new DOMParser().parseFromString(xmlText, "text/xml");
+      const items = Array.from(doc.querySelectorAll("item")).slice(0, limit);
+      return items.map(it => {
+        const title = it.querySelector("title")?.textContent?.trim() || "";
+        const link  = it.querySelector("link")?.textContent?.trim()  || "";
+        const source = it.querySelector("source")?.textContent?.trim() || "";
+        return { title, link, source };
+      }).filter(x => x.title);
+    }
+
+    // ---- Copilot Chat API (Microsoft Graph beta) ----
+    // 会話作成→メッセージ送信の形（例）: /beta/copilot/conversations [3](https://docs.github.com/)
+    let msalApp = null;
+    let activeAccount = null;
+
+    function buildMsal(){
+      const clientId = $("clientId").value.trim();
+      const tenantId = $("tenantId").value.trim();
+      if(!clientId || !tenantId) throw new Error("missing_client_or_tenant");
+
+      const config = {
+        auth: {
+          clientId,
+          authority: `https://login.microsoftonline.com/${tenantId}`,
+          redirectUri: location.href.split("#")[0]
+        },
+        cache: { cacheLocation: "localStorage" }
+      };
+      msalApp = new msal.PublicClientApplication(config);
+      return msalApp;
+    }
+
+    async function signIn(){
+      if(!msalApp) buildMsal();
+      const scopes = $("scopes").value.split(",").map(s=>s.trim()).filter(Boolean);
+      const resp = await msalApp.loginPopup({ scopes });
+      activeAccount = resp.account;
+      msalApp.setActiveAccount(activeAccount);
+      whoEl.textContent = `Signed in: ${activeAccount.username}`;
+      whoEl.classList.add("mono");
+      saveSettings();
+      toast("サインインしました");
+    }
+
+    async function signOut(){
+      if(!msalApp) return;
+      const acc = msalApp.getActiveAccount() || activeAccount;
+      if(!acc) return;
+      await msalApp.logoutPopup({ account: acc });
+      activeAccount = null;
+      whoEl.textContent = "未サインイン";
+      toast("サインアウトしました");
+    }
+
+    async function getToken(){
+      if(!msalApp) buildMsal();
+      const scopes = $("scopes").value.split(",").map(s=>s.trim()).filter(Boolean);
+      const account = msalApp.getActiveAccount() || activeAccount;
+      if(!account) throw new Error("not_signed_in");
+      try{
+        const res = await msalApp.acquireTokenSilent({ scopes, account });
+        return res.accessToken;
+      } catch {
+        const res = await msalApp.acquireTokenPopup({ scopes });
+        return res.accessToken;
+      }
+    }
+
+    async function createConversation(token){
+      const res = await fetch("https://graph.microsoft.com/beta/copilot/conversations", {
+        method: "POST",
+        headers: { "content-type":"application/json", "authorization": `Bearer ${token}` },
+        body: JSON.stringify({})
+      });
+      if(!res.ok) throw new Error("create_conversation_failed");
+      return await res.json(); // { id, ... }
+    }
+
+    async function sendConversationMessage(token, conversationId, text){
+      const url = `https://graph.microsoft.com/beta/copilot/conversations/${encodeURIComponent(conversationId)}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "content-type":"application/json", "authorization": `Bearer ${token}` },
+        body: JSON.stringify({
+          message: { text },
+          locationHint: { timeZone: "Asia/Tokyo" }
+        })
+      });
+      if(!res.ok) throw new Error("send_message_failed");
+      return await res.json();
+    }
+
+    function buildCopilotInput(topic, headlines){
+      const prompt = $("prompt").value || defaultPrompt();
+      const lines = headlines.map((h,i)=>{
+        const src = h.source ? `（${h.source}）` : "";
+        return `${i+1}. ${h.title}${src}`;
+      }).join("\n");
+      return `${prompt}\n\nトピック: ${topic}\n見出し一覧:\n${lines}`;
+    }
+
+    function createCard(t){
+      const card = document.createElement("section");
+      card.className = "card";
+      card.dataset.topic = t.word;
+
+      card.innerHTML = `
+        <div class="head">
+          <div class="left">
+            <div class="rank">${t.rank}</div>
+            <div style="min-width:0">
+              <p class="topic">${escHtml(t.word)}</p>
+              <div class="meta">ランキング更新: <span class="mono">${escHtml(SOURCE_UPDATED)}</span></div>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn small primary" data-act="summarize">AI要約（Copilot）</button>
+            <button class="btn small" data-act="toggle">表示/非表示</button>
           </div>
         </div>
-        <div class="actions">
-          <button class="btn small primary" data-act="summarize">要約する</button>
-          <button class="btn small" data-act="toggle">表示/非表示</button>
+
+        <div class="summary">
+          <div class="label">
+            <span>要約（Copilot）: <span class="mono" data-role="status">未取得</span></span>
+            <span><a class="link" href="${SOURCE_URL}" target="_blank" rel="noopener noreferrer">出典 ↗</a></span>
+          </div>
+          <div class="text" data-role="text">「AI要約（Copilot）」を押すと表示されます。</div>
+
+          <div style="height:10px"></div>
+          <div class="label">
+            <span>参照した見出し（GoogleニュースRSS）</span>
+            <span class="mono" data-role="hcount">0件</span>
+          </div>
+          <div class="text" data-role="heads"></div>
         </div>
-      </div>
+      `;
 
-      <div class="summary" id="sum-${t.rank}">
-        <div class="label">
-          <span>要約（Wikipedia）: <span class="mono" data-role="title">未取得</span></span>
-          <span>
-            <a class="link" href="#" data-role="open" target="_blank" rel="noopener noreferrer" style="display:none">Wikipediaで開く ↗</a>
-          </span>
-        </div>
-        <div class="text" data-role="text">ボタン「要約する」を押すと表示されます。</div>
-      </div>
-    `;
-
-    card.addEventListener("click", async (ev) => {
-      const btn = ev.target.closest("button");
-      if(!btn) return;
-
-      const act = btn.dataset.act;
-      const topic = card.dataset.topic;
       const summaryBox = card.querySelector(".summary");
-      const titleEl = summaryBox.querySelector('[data-role="title"]');
-      const textEl  = summaryBox.querySelector('[data-role="text"]');
-      const openEl  = summaryBox.querySelector('[data-role="open"]');
+      const statusEl = summaryBox.querySelector('[data-role="status"]');
+      const textEl = summaryBox.querySelector('[data-role="text"]');
+      const headsEl = summaryBox.querySelector('[data-role="heads"]');
+      const hcountEl = summaryBox.querySelector('[data-role="hcount"]');
 
-      if(act === "toggle"){
-        summaryBox.style.display = (summaryBox.style.display === "none" || !summaryBox.style.display) ? "block" : "none";
-        return;
+      function setLoading(btn, on){
+        if(on){
+          btn.disabled = true;
+          btn.textContent = "生成中…";
+          statusEl.textContent = "生成中";
+        } else {
+          btn.disabled = false;
+          btn.textContent = "AI要約（Copilot）";
+        }
       }
 
-      if(act === "summarize"){
-        summaryBox.style.display = "block";
-        btn.disabled = true;
-        btn.textContent = "取得中…";
+      function renderHeadlines(headlines){
+        hcountEl.textContent = `${headlines.length}件`;
+        headsEl.textContent = headlines.map((h,i)=>{
+          const src = h.source ? `（${h.source}）` : "";
+          return `${i+1}. ${h.title}${src}`;
+        }).join("\n");
+      }
 
-        // cache
-        const cache = loadCache();
-        if(cache[topic] && cache[topic].extract){
-          titleEl.textContent = cache[topic].title || "（キャッシュ）";
-          textEl.textContent  = cache[topic].extract;
-          openEl.href = cache[topic].url || "#";
-          openEl.style.display = cache[topic].url ? "inline" : "none";
-          btn.disabled = false;
-          btn.textContent = "要約する";
+      async function runSummarize(btn){
+        summaryBox.style.display = "block";
+
+        // cache (10分)
+        const cache = loadJson(CACHE_KEY, {});
+        const cached = cache[card.dataset.topic];
+        if(cached && (Date.now() - cached.ts) < 10*60*1000 && cached.summary){
+          statusEl.textContent = "キャッシュ";
+          textEl.textContent = cached.summary;
+          renderHeadlines(cached.headlines || []);
           toast("キャッシュから表示しました");
           return;
         }
 
+        setLoading(btn, true);
         try{
-          // 軽いディレイ（連打対策）
-          await sleep(120);
+          saveSettings();
 
-          const r = await fetchWikiSummary(topic);
-          if(!r.found){
-            titleEl.textContent = r.title ? r.title : "該当なし";
-            textEl.textContent =
-              "Wikipediaで一致するページの要約が見つかりませんでした。\n" +
-              "（固有名詞が特殊/新語/略語の場合に起きやすいです）";
-            openEl.style.display = "none";
+          const token = await getToken(); // サインイン必須
+          const topic = card.dataset.topic;
 
-            cache[topic] = { ts: Date.now(), title: r.title || "", extract: "", url: r.url || "" };
-            saveCache(cache);
-            toast("要約は見つかりませんでした");
-          } else {
-            titleEl.textContent = r.title;
-            textEl.textContent  = r.extract;
-            openEl.href = r.url;
-            openEl.style.display = "inline";
+          const headlines = await fetchRssHeadlines(topic, 8);
+          renderHeadlines(headlines);
 
-            cache[topic] = { ts: Date.now(), title: r.title, extract: r.extract, url: r.url };
-            saveCache(cache);
-            toast("要約を取得しました");
+          if(headlines.length === 0){
+            statusEl.textContent = "失敗";
+            textEl.textContent = "見出しを取得できませんでした（RSS結果が空）。";
+            return;
           }
-        } catch (e){
-          titleEl.textContent = "取得失敗";
+
+          const input = buildCopilotInput(topic, headlines);
+          const conv = await createConversation(token);
+          const resp = await sendConversationMessage(token, conv.id, input);
+
+          // 例のレスポンスでは messages 配列に text が含まれる [3](https://docs.github.com/)
+          const msgs = resp && resp.messages ? resp.messages : [];
+          const lastText = [...msgs].reverse().find(m => m.text && m.text.trim())?.text || "";
+
+          statusEl.textContent = "完了";
+          textEl.textContent = lastText || "（要約テキストを取得できませんでした）";
+
+          cache[topic] = { ts: Date.now(), summary: textEl.textContent, headlines };
+          saveJson(CACHE_KEY, cache);
+          toast("Copilotで要約しました");
+        } catch(e){
+          const m = String(e?.message || e);
+          statusEl.textContent = "失敗";
           textEl.textContent =
-            "要約の取得に失敗しました。\n" +
-            "・ネットワーク\n・Wikipedia側の制限\n・ブラウザのセキュリティ設定\nなどを確認してください。";
-          openEl.style.display = "none";
-          toast("取得に失敗しました");
+            "AI要約に失敗しました。\n" +
+            (m.includes("missing_client_or_tenant") ? "・CLIENT_ID / TENANT_ID を設定してください\n" : "") +
+            (m.includes("not_signed_in") ? "・先にサインインしてください\n" : "") +
+            (m.includes("rss_fetch_failed") ? "・RSS取得に失敗しました（ネットワーク/CORS等）\n" : "") +
+            "・Copilot Chat APIはプレビューで、テキスト応答のみ等の制限があります。[2](https://qiita.com/Biwakonosoko/items/6081d2ceef6476407cea)";
+          toast("失敗しました");
         } finally {
-          btn.disabled = false;
-          btn.textContent = "要約する";
+          setLoading(btn, false);
         }
       }
+
+      card.addEventListener("click", async (ev) => {
+        const btn = ev.target.closest("button");
+        if(!btn) return;
+
+        const act = btn.dataset.act;
+        if(act === "toggle"){
+          summaryBox.style.display = (summaryBox.style.display === "none" || !summaryBox.style.display) ? "block" : "none";
+          return;
+        }
+        if(act === "summarize"){
+          await runSummarize(btn);
+          return;
+        }
+      });
+
+      return card;
+    }
+
+    // render
+    loadSettings();
+    TOPICS.forEach(t => grid.appendChild(createCard(t)));
+
+    // top buttons
+    $("btnClearCache").addEventListener("click", () => {
+      try{ localStorage.removeItem(CACHE_KEY); }catch{}
+      toast("要約キャッシュを削除しました");
     });
+    $("btnSignIn").addEventListener("click", signIn);
+    $("btnSignOut").addEventListener("click", signOut);
 
-    return card;
-  }
-
-  // render
-  TOPICS.forEach(t => grid.appendChild(createCard(t)));
-
-  // top buttons
-  document.getElementById("btnClearCache").addEventListener("click", () => {
-    try{ localStorage.removeItem(CACHE_KEY); } catch {}
-    toast("要約キャッシュを削除しました");
-  });
-  document.getElementById("btnOpenSource").addEventListener("click", () => {
-    window.open(SOURCE_URL, "_blank", "noopener,noreferrer");
-  });
-})();
-</script>
+  })();
+  </script>
 </body>
 </html>
-``
