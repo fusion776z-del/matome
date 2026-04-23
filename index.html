@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>今日の注目TOP10（日本）— AI要約（Copilot / Web）</title>
+  <title>今日の注目TOP10（日本）— まとめリンク集</title>
   <style>
     :root{
       --bg:#0b1220; --panel:#111a2e; --text:#e8eeff; --muted:#9fb0d0;
       --line:rgba(255,255,255,.12); --shadow:0 18px 45px rgba(0,0,0,.38);
-      --radius:18px; --brand:#6ea8ff; --warn:#fbbf24; --ok:#2dd4bf;
+      --radius:18px; --brand:#6ea8ff;
       --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP",
-              "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", Arial, sans-serif;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+              "Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo", Arial, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
     }
     *{box-sizing:border-box}
     body{
@@ -21,14 +21,14 @@
                   linear-gradient(180deg, #070c16, var(--bg));
       min-height:100vh;
     }
-    .wrap{max-width:1100px; margin:0 auto; padding:22px}
-    header{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:12px; margin:6px 0 14px;}
-    h1{margin:0; font-size:22px; letter-spacing:.2px}
-    .sub{color:var(--muted); font-size:13px; line-height:1.55; margin-top:6px}
+    .wrap{max-width:1100px;margin:0 auto;padding:22px}
+    header{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;margin:6px 0 14px}
+    h1{margin:0;font-size:22px}
+    .sub{color:var(--muted);font-size:13px;line-height:1.55;margin-top:6px}
     .badge{
-      display:inline-flex; align-items:center; gap:8px;
-      border:1px solid var(--line); background:rgba(255,255,255,.05);
-      padding:8px 10px; border-radius:999px; color:var(--muted); font-size:12px;
+      display:inline-flex;align-items:center;gap:8px;
+      border:1px solid var(--line);background:rgba(255,255,255,.05);
+      padding:8px 10px;border-radius:999px;color:var(--muted);font-size:12px
     }
     .panel{
       border:1px solid var(--line);
@@ -38,8 +38,8 @@
       padding:14px;
       margin: 10px 0 14px;
     }
-    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between}
-    .hint{color:var(--muted); font-size:12px; line-height:1.55}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+    .hint{color:var(--muted);font-size:12px;line-height:1.55}
     .btn{
       border:1px solid var(--line);
       background: rgba(255,255,255,.06);
@@ -48,9 +48,10 @@
       border-radius: 14px;
       cursor:pointer;
       transition:.15s ease;
-      display:inline-flex; align-items:center; gap:8px;
+      display:inline-flex;align-items:center;gap:8px;
       user-select:none;
       white-space:nowrap;
+      text-decoration:none;
     }
     .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.09)}
     .btn.primary{
@@ -58,90 +59,41 @@
       background: linear-gradient(135deg, rgba(110,168,255,.22), rgba(138,92,255,.20));
     }
     .btn.small{padding:7px 10px;border-radius:12px;font-size:12px}
-    .btn.warn{border-color: rgba(251,191,36,.55); background: rgba(251,191,36,.12)}
-    .btn.ok{border-color: rgba(45,212,191,.55); background: rgba(45,212,191,.13)}
-    .grid{display:grid; grid-template-columns: repeat(2, 1fr); gap:12px;}
+    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
     @media (max-width: 900px){ .grid{grid-template-columns:1fr} }
-
     .card{
       border:1px solid var(--line);
       background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       padding:14px;
-      display:flex; flex-direction:column; gap:10px;
+      display:flex;flex-direction:column;gap:10px;
     }
-    .head{display:flex; gap:10px; align-items:flex-start; justify-content:space-between;}
-    .left{display:flex; gap:10px; align-items:flex-start; min-width:0;}
+    .head{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+    .left{display:flex;gap:10px;align-items:flex-start;min-width:0}
     .rank{
-      width:34px; height:34px; border-radius:12px;
-      display:grid; place-items:center;
+      width:34px;height:34px;border-radius:12px;display:grid;place-items:center;
       background: rgba(110,168,255,.16);
       border:1px solid rgba(110,168,255,.35);
-      font-weight:800;
-      flex:0 0 auto;
+      font-weight:800;flex:0 0 auto;
     }
-    .topic{margin:0; font-size:16px; font-weight:800; line-height:1.35; word-break:break-word;}
-    .meta{color:var(--muted); font-size:12px; margin-top:4px;}
-    .actions{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; flex:0 0 auto;}
-
-    .summary{
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.03);
-      border-radius: 16px;
-      padding: 10px 12px;
-      display:none;
-    }
-    .label{
-      font-size:12px; color:var(--muted);
-      display:flex; justify-content:space-between; gap:10px; align-items:center;
-      margin-bottom:6px;
-    }
-    .text{
-      font-size:13px; line-height:1.65; color:rgba(232,238,255,.92);
-      white-space:pre-wrap;
-    }
+    .topic{margin:0;font-size:16px;font-weight:800;line-height:1.35;word-break:break-word}
+    .meta{color:var(--muted);font-size:12px;margin-top:4px}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
     .mono{font-family:var(--mono)}
-    a.link{color: var(--brand); text-decoration:none}
+    a.link{color:var(--brand);text-decoration:none}
     a.link:hover{text-decoration:underline}
-
-    .formgrid{
-      display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;
-    }
-    @media (max-width: 900px){ .formgrid{grid-template-columns:1fr} }
-    input, textarea{
-      width:100%;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.04);
-      color:var(--text);
-      border-radius: 14px;
-      padding: 10px 12px;
-      outline:none;
-    }
-    textarea{min-height:92px; resize:vertical}
-
-    .toast{
-      position:fixed; right:18px; bottom:18px;
-      background: rgba(17,26,46,.92);
-      border:1px solid var(--line);
-      border-radius: 16px;
-      padding: 10px 12px;
-      box-shadow: var(--shadow);
-      color: var(--text);
-      display:none;
-      max-width: 420px;
-      font-size:13px;
-      z-index: 999;
-    }
+    .footer{color:var(--muted);font-size:12px;line-height:1.55;margin-top:14px}
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <div>
-        <h1>今日の注目TOP10（日本）— AI要約（Copilot / Web）</h1>
+        <h1>今日の注目TOP10（日本）— まとめリンク集</h1>
         <div class="sub">
-          CopilotがWeb情報を参照して「いい感じに」要約し、可能なら参照URL（attributions）も表示します。Chat APIはプレビューでテキスト応答のみ等の制限があります。[4](https://codingls.com/js/1214/)
+          ログイン不要。各トピックからニュース/トレンドの「まとめ」ページへ飛びます。<br/>
+          Googleニュース（RSS見出し）、X検索、トレンド一覧などをワンタップで開けます。[1](https://tweetan.dtn.jp/)[2](https://qiita.com/ken1math/items/dd5349f4caf84cb07d5c)[3](https://jp.trend-calendar.com/)[4](https://trends.google.co.jp/trending)[5](https://twittrend.jp/)
         </div>
       </div>
       <div class="badge">
@@ -152,489 +104,93 @@
     <section class="panel">
       <div class="row">
         <div class="hint">
-          ・スマホは popup が制限されやすいので、サインインは redirect 優先にしています（MSALの推奨）。[1](https://yorozuroku.com/web-design/html-template/)<br/>
-          ・SSO（自動サインイン）は、EntraのセッションCookieとMSALキャッシュを利用して試行します（ssoSilent など）。[2](https://lifestyle.assist-all.co.jp/yahoo-twitter-realtime-search-trend-ranking-tips/)<br/>
-          ・Copilot会話は Graph の <span class="mono">/beta/copilot/conversations</span> を使う例の形です。[3](https://mk196790903.com/github-pages-%e3%81%a7%e3%82%b5%e3%82%a4%e3%83%88%e3%82%92%e5%85%ac%e9%96%8b%e3%81%99%e3%82%8b%e6%89%8b%e9%a0%86%e3%80%90%e5%88%9d%e5%bf%83%e8%80%85%e3%81%a7%e3%82%825%e3%82%b9%e3%83%86%e3%83%83/)
+          ・Googleニュースは検索RSS（見出し一覧）に飛びます（URLの法則を使います）。[1](https://tweetan.dtn.jp/)<br/>
+          ・Xは検索URL（q=）で開きます。[2](https://qiita.com/ken1math/items/dd5349f4caf84cb07d5c)
         </div>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button class="btn small primary" id="btnSignIn">サインイン</button>
-          <button class="btn small" id="btnSignOut">サインアウト</button>
-          <button class="btn small warn" id="btnClearCache">要約キャッシュ削除</button>
-          <button class="btn small" id="btnOpenSource">ランキング出典を開く</button>
+          <a class="btn small primary" href="https://jp.trend-calendar.com/" target="_blank" rel="noopener noreferrer">トレンドカレンダー ↗</a>
+          <a class="btn small" href="https://trends.google.co.jp/trending" target="_blank" rel="noopener noreferrer">Googleトレンド 急上昇 ↗</a>
+          <a class="btn small" href="https://twittrend.jp/" target="_blank" rel="noopener noreferrer">Twittrend（Xトレンド）↗</a>
         </div>
       </div>
-
-      <div class="formgrid">
-        <div>
-          <div class="sub" style="margin:0 0 6px;">CLIENT_ID（Entraアプリ）</div>
-          <input id="clientId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
-        </div>
-        <div>
-          <div class="sub" style="margin:0 0 6px;">TENANT_ID（ディレクトリ）</div>
-          <input id="tenantId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
-        </div>
-        <div>
-          <div class="sub" style="margin:0 0 6px;">Scopes（カンマ区切り）</div>
-          <input id="scopes" value="User.Read" />
-          <div class="hint" style="margin-top:6px;">
-            ※必要な権限はテナント設定次第です。まずはこのままで試して、エラーが出たら増やしてください。
-          </div>
-        </div>
-        <div>
-          <div class="sub" style="margin:0 0 6px;">サインイン状態</div>
-          <div class="badge mono" id="who">自動サインイン試行中…</div>
-        </div>
-      </div>
-
-      <div style="margin-top:10px;">
-        <div class="sub" style="margin:0 0 6px;">要約プロンプト（自由に調整OK）</div>
-        <textarea id="prompt"></textarea>
+      <div class="footer">
+        トレンドカレンダー（ランキング元）: <a class="link" href="https://jp.trend-calendar.com/" target="_blank" rel="noopener noreferrer">https://jp.trend-calendar.com/</a> [3](https://jp.trend-calendar.com/)
       </div>
     </section>
 
     <main class="grid" id="grid"></main>
-    <div class="toast" id="toast"></div>
+
+    <div class="footer">
+      ※「Googleニュース（RSS）」はXML表示になりますが、見出しのまとまりを最短で確認できます。[1](https://tweetan.dtn.jp/)
+    </div>
   </div>
 
-  <!-- MSAL (browser) -->
-  <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.20.0/lib/msal-browser.min.js"></script>
+<script>
+(() => {
+  const SOURCE_UPDATED = "2026-04-23 01:45";
 
-  <script>
-  (() => {
-    // 出典: トレンドカレンダー「Googleトレンドワードランキング」(2026/04/23 01:45 更新)
-    const SOURCE_URL = "https://jp.trend-calendar.com/";
-    const SOURCE_UPDATED = "2026-04-23 01:45";
+  const TOPICS = [
+    { rank: 1, word: "サンリオ ボンボンドロップシール" },
+    { rank: 2, word: "失点" },
+    { rank: 3, word: "日ハム" },
+    { rank: 4, word: "阪神" },
+    { rank: 5, word: "ボートレースびわこ" },
+    { rank: 6, word: "池上彰" },
+    { rank: 7, word: "紀伊國屋書店" },
+    { rank: 8, word: "プロ野球 順位" },
+    { rank: 9, word: "ios 27" },
+    { rank:10, word: "八村塁" }
+  ];
 
-    const TOPICS = [
-      { rank: 1, word: "サンリオ ボンボンドロップシール" },
-      { rank: 2, word: "失点" },
-      { rank: 3, word: "日ハム" },
-      { rank: 4, word: "阪神" },
-      { rank: 5, word: "ボートレースびわこ" },
-      { rank: 6, word: "池上彰" },
-      { rank: 7, word: "紀伊國屋書店" },
-      { rank: 8, word: "プロ野球 順位" },
-      { rank: 9, word: "ios 27" },
-      { rank:10, word: "八村塁" }
-    ];
+  const $grid = document.getElementById("grid");
 
-    // localStorage keys
-    const SETTINGS_KEY = "copilot-websummary-settings.v2";
-    const CACHE_KEY = "copilot-websummary-cache.v2"; // { "<topic>": {ts, summary, citations} }
+  const esc = (s)=>String(s)
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
 
-    const grid = document.getElementById("grid");
-    const toastEl = document.getElementById("toast");
-    const whoEl = document.getElementById("who");
-    const $ = (id) => document.getElementById(id);
+  // Googleニュース検索RSS（キーワード検索）のURL法則 [1](https://tweetan.dtn.jp/)
+  function googleNewsRss(q){
+    return `https://news.google.com/news/rss/search/section/q/${encodeURIComponent(q)}?hl=ja&gl=JP&ned=jp`;
+  }
 
-    function escapeHTML(s){
-      return String(s)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
+  // X 検索URL（q=） [2](https://qiita.com/ken1math/items/dd5349f4caf84cb07d5c)
+  function xSearch(q){
+    // 例として f=live（最新）を付ける。q は encodeURIComponent で安全化
+    const query = encodeURIComponent(`${q} lang:ja`);
+    return `https://x.com/search?q=${query}&f=live&src=typed_query`;
+  }
 
-    function toast(msg){
-      toastEl.textContent = msg;
-      toastEl.style.display = "block";
-      clearTimeout(toastEl._t);
-      toastEl._t = setTimeout(()=> toastEl.style.display="none", 2200);
-    }
-
-    function loadJson(key, fallback){
-      try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
-      catch{ return fallback; }
-    }
-    function saveJson(key, obj){
-      try{ localStorage.setItem(key, JSON.stringify(obj)); return true; }
-      catch{ return false; }
-    }
-
-    function defaultPrompt(){
-      return [
-        "次のトピックについて、Web情報（最新の公開情報）を参照して要約してください。",
-        "",
-        "出力形式（必ずこの順で）：",
-        "1) 120〜200字の要約",
-        "2) 重要ポイント3つ（箇条書き）",
-        "3) 参照したWebページURLを3件（可能なら）",
-        "",
-        "制約：推測で事実を作らない。不明は『不明』『要確認』。",
-        "注意：個人情報や機密情報は含めない。"
-      ].join("\n");
-    }
-
-    function loadSettings(){
-      const s = loadJson(SETTINGS_KEY, {});
-      $("clientId").value = s.clientId || "";
-      $("tenantId").value = s.tenantId || "";
-      $("scopes").value = s.scopes || "User.Read";
-      $("prompt").value = s.prompt || defaultPrompt();
-      return s;
-    }
-    function saveSettings(extra){
-      const s0 = loadJson(SETTINGS_KEY, {});
-      const s = Object.assign({}, s0, {
-        clientId: $("clientId").value.trim(),
-        tenantId: $("tenantId").value.trim(),
-        scopes: $("scopes").value.trim(),
-        prompt: $("prompt").value
-      }, extra || {});
-      saveJson(SETTINGS_KEY, s);
-      return s;
-    }
-
-    function isMobile(){
-      return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    }
-
-    // ---- MSAL / Auth ----
-    let msalApp = null;
-    let activeAccount = null;
-
-    function buildMsal(){
-      const clientId = $("clientId").value.trim();
-      const tenantId = $("tenantId").value.trim();
-      if(!clientId || !tenantId) throw new Error("missing_client_or_tenant");
-
-      const config = {
-        auth: {
-          clientId,
-          authority: `https://login.microsoftonline.com/${tenantId}`,
-          redirectUri: location.href.split("#")[0]
-        },
-        // 同一ドメインでのSSOにlocalStorageが有効（MSALのSSO説明）[2](https://lifestyle.assist-all.co.jp/yahoo-twitter-realtime-search-trend-ranking-tips/)
-        cache: { cacheLocation: "localStorage" }
-      };
-      msalApp = new msal.PublicClientApplication(config);
-      return msalApp;
-    }
-
-    function setSignedInUI(account){
-      if(account){
-        whoEl.textContent = `Signed in: ${account.username}`;
-        whoEl.classList.add("mono");
-      } else {
-        whoEl.textContent = "未サインイン";
-      }
-    }
-
-    async function signIn(){
-      if(!msalApp) buildMsal();
-      const scopes = $("scopes").value.split(",").map(s=>s.trim()).filter(Boolean);
-      const req = { scopes };
-
-      // スマホは redirect 優先（popupが制限されやすい）[1](https://yorozuroku.com/web-design/html-template/)
-      if(isMobile()){
-        await msalApp.loginRedirect(req);
-        return;
-      } else {
-        const resp = await msalApp.loginPopup(req);
-        activeAccount = resp.account;
-        msalApp.setActiveAccount(activeAccount);
-        saveSettings({ lastLoginHint: activeAccount?.username || "" });
-        setSignedInUI(activeAccount);
-        toast("サインインしました");
-      }
-    }
-
-    async function signOut(){
-      if(!msalApp) return;
-      const acc = msalApp.getActiveAccount() || activeAccount;
-      if(!acc) return;
-      if(isMobile()){
-        await msalApp.logoutRedirect({ account: acc });
-      } else {
-        await msalApp.logoutPopup({ account: acc });
-      }
-      activeAccount = null;
-      setSignedInUI(null);
-      toast("サインアウトしました");
-    }
-
-    // 自動サインイン（SSO）：
-    // - redirect戻り処理 handleRedirectPromise
-    // - getAllAccountsでキャッシュ参照
-    // - それでも無ければ ssoSilent を試す（EntraセッションCookieがあれば無操作で入れる可能性）[1](https://yorozuroku.com/web-design/html-template/)[2](https://lifestyle.assist-all.co.jp/yahoo-twitter-realtime-search-trend-ranking-tips/)
-    async function tryAutoSignIn(){
-      if(!msalApp) buildMsal();
-
-      // redirectフローの戻り処理（redirect方式では必須）[1](https://yorozuroku.com/web-design/html-template/)
-      let redirectResp = null;
-      try{
-        redirectResp = await msalApp.handleRedirectPromise();
-      } catch {}
-
-      if(redirectResp?.account){
-        activeAccount = redirectResp.account;
-        msalApp.setActiveAccount(activeAccount);
-        saveSettings({ lastLoginHint: activeAccount?.username || "" });
-        setSignedInUI(activeAccount);
-        return true;
-      }
-
-      // 既存キャッシュからアカウントを拾う（同一アプリ/同一ドメインSSO）[2](https://lifestyle.assist-all.co.jp/yahoo-twitter-realtime-search-trend-ranking-tips/)
-      const acc = msalApp.getActiveAccount?.() || msalApp.getAllAccounts?.()?.[0] || activeAccount;
-      if(acc){
-        activeAccount = acc;
-        msalApp.setActiveAccount(acc);
-        setSignedInUI(acc);
-        return true;
-      }
-
-      // ssoSilent（成功すればボタン押さずに入る）[2](https://lifestyle.assist-all.co.jp/yahoo-twitter-realtime-search-trend-ranking-tips/)
-      const s = loadJson(SETTINGS_KEY, {});
-      const hint = s.lastLoginHint;
-      try{
-        const ssoReq = hint ? { loginHint: hint } : {};
-        const ssoResp = await msalApp.ssoSilent(ssoReq);
-        if(ssoResp?.account){
-          activeAccount = ssoResp.account;
-          msalApp.setActiveAccount(activeAccount);
-          saveSettings({ lastLoginHint: activeAccount?.username || "" });
-          setSignedInUI(activeAccount);
-          return true;
-        }
-      } catch {
-        // ブラウザ制約等でsilentが失敗してもOK
-      }
-
-      setSignedInUI(null);
-      return false;
-    }
-
-    // トークン取得：まず silent、ダメなら必要に応じて interactive
-    async function getToken(){
-      if(!msalApp) buildMsal();
-
-      const scopes = $("scopes").value.split(",").map(s=>s.trim()).filter(Boolean);
-      const account = msalApp.getActiveAccount?.() || activeAccount || msalApp.getAllAccounts?.()?.[0];
-      if(!account) throw new Error("not_signed_in");
-
-      try{
-        const res = await msalApp.acquireTokenSilent({ scopes, account });
-        return res.accessToken;
-      } catch(e){
-        // interaction required の場合、スマホは redirect、PCは popup
-        if(isMobile()){
-          await msalApp.acquireTokenRedirect({ scopes, account });
-          throw new Error("redirecting_for_token");
-        } else {
-          const res = await msalApp.acquireTokenPopup({ scopes, account });
-          return res.accessToken;
-        }
-      }
-    }
-
-    // ---- Copilot Chat API (Graph beta) ----
-    // 会話作成→メッセージ送信 (例) [3](https://mk196790903.com/github-pages-%e3%81%a7%e3%82%b5%e3%82%a4%e3%83%88%e3%82%92%e5%85%ac%e9%96%8b%e3%81%99%e3%82%8b%e6%89%8b%e9%a0%86%e3%80%90%e5%88%9d%e5%bf%83%e8%80%85%e3%81%a7%e3%82%825%e3%82%b9%e3%83%86%e3%83%83/)
-    async function createConversation(token){
-      const res = await fetch("https://graph.microsoft.com/beta/copilot/conversations", {
-        method: "POST",
-        headers: { "content-type":"application/json", "authorization": `Bearer ${token}` },
-        body: JSON.stringify({})
-      });
-      if(!res.ok) throw new Error("create_conversation_failed");
-      return await res.json();
-    }
-
-    async function sendConversationMessage(token, conversationId, text){
-      const url = `https://graph.microsoft.com/beta/copilot/conversations/${encodeURIComponent(conversationId)}`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "content-type":"application/json", "authorization": `Bearer ${token}` },
-        body: JSON.stringify({
-          message: { text },
-          locationHint: { timeZone: "Asia/Tokyo" }
-        })
-      });
-      if(!res.ok) throw new Error("send_message_failed");
-      return await res.json();
-    }
-
-    function buildWebSummaryPrompt(topic){
-      const base = $("prompt").value || defaultPrompt();
-      return `${base}\n\nトピック: ${topic}`;
-    }
-
-    function extractTextAndCitations(resp){
-      const msgs = resp?.messages || [];
-      const lastText = [...msgs].reverse().find(m => m?.text && m.text.trim())?.text || "";
-
-      // attributions にURLが入る場合がある（実例あり）[3](https://mk196790903.com/github-pages-%e3%81%a7%e3%82%b5%e3%82%a4%e3%83%88%e3%82%92%e5%85%ac%e9%96%8b%e3%81%99%e3%82%8b%e6%89%8b%e9%a0%86%e3%80%90%e5%88%9d%e5%bf%83%e8%80%85%e3%81%a7%e3%82%825%e3%82%b9%e3%83%86%e3%83%83/)
-      const urls = [];
-      for(const m of msgs){
-        const atts = m.attributions || [];
-        for(const a of atts){
-          const u = a.seeMoreWebUrl || a.webUrl || a.url;
-          if(u) urls.push(u);
-        }
-      }
-      const unique = [...new Set(urls)];
-      return { text: lastText, citations: unique };
-    }
-
-    function createCard(t){
-      const card = document.createElement("section");
-      card.className = "card";
-      card.dataset.topic = t.word;
-
-      card.innerHTML = `
-        <div class="head">
-          <div class="left">
-            <div class="rank">${t.rank}</div>
-            <div style="min-width:0">
-              <p class="topic">${escapeHTML(t.word)}</p>
-              <div class="meta">ランキング更新: <span class="mono">${escapeHTML(SOURCE_UPDATED)}</span></div>
-            </div>
-          </div>
-          <div class="actions">
-            <button class="btn small primary" data-act="summarize">AI要約（Copilot）</button>
-            <button class="btn small" data-act="toggle">表示/非表示</button>
+  function createCard(t){
+    const topic = t.word;
+    const el = document.createElement("section");
+    el.className = "card";
+    el.innerHTML = `
+      <div class="head">
+        <div class="left">
+          <div class="rank">${t.rank}</div>
+          <div style="min-width:0">
+            <p class="topic">${esc(topic)}</p>
+            <div class="meta">ランキング更新: <span class="mono">${esc(SOURCE_UPDATED)}</span></div>
           </div>
         </div>
-
-        <div class="summary">
-          <div class="label">
-            <span>要約: <span class="mono" data-role="status">未取得</span></span>
-            <span><a class="link" href="${SOURCE_URL}" target="_blank" rel="noopener noreferrer">出典 ↗</a></span>
-          </div>
-          <div class="text" data-role="text">「AI要約（Copilot）」を押すと表示されます。</div>
-
-          <div style="height:10px"></div>
-          <div class="label">
-            <span>参照URL（返ってきた場合）</span>
-            <span class="mono" data-role="ccount">0件</span>
-          </div>
-          <div class="text" data-role="cites"></div>
+        <div class="actions">
+          <a class="btn small primary" href="${googleNewsRss(topic)}" target="_blank" rel="noopener noreferrer">Googleニュース（RSS）↗</a>
+          <a class="btn small" href="${xSearch(topic)}" target="_blank" rel="noopener noreferrer">Xで検索 ↗</a>
         </div>
-      `;
+      </div>
 
-      const summaryBox = card.querySelector(".summary");
-      const statusEl = summaryBox.querySelector('[data-role="status"]');
-      const textEl = summaryBox.querySelector('[data-role="text"]');
-      const citesEl = summaryBox.querySelector('[data-role="cites"]');
-      const ccountEl = summaryBox.querySelector('[data-role="ccount"]');
+      <div class="hint">
+        追加で見る：
+        <a class="link" href="https://jp.trend-calendar.com/" target="_blank" rel="noopener noreferrer">トレンドカレンダー</a> /
+        <a class="link" href="https://trends.google.co.jp/trending" target="_blank" rel="noopener noreferrer">Googleトレンド急上昇</a> /
+        <a class="link" href="https://twittrend.jp/" target="_blank" rel="noopener noreferrer">Twittrend</a>
+      </div>
+    `;
+    return el;
+  }
 
-      function setLoading(btn, on){
-        if(on){
-          btn.disabled = true;
-          btn.textContent = "生成中…";
-          statusEl.textContent = "生成中";
-        } else {
-          btn.disabled = false;
-          btn.textContent = "AI要約（Copilot）";
-        }
-      }
-
-      function renderCitations(urls){
-        const list = (urls || []).slice(0, 6);
-        ccountEl.textContent = `${list.length}件`;
-        if(!list.length){
-          citesEl.textContent = "（参照URLは返りませんでした）";
-          return;
-        }
-        citesEl.innerHTML = list.map(u => {
-          const safe = escapeHTML(u);
-          return `<a class="link" href="${safe}" target="_blank" rel="noopener noreferrer">${safe}</a>`;
-        }).join("<br/>");
-      }
-
-      async function runSummarize(btn){
-        summaryBox.style.display = "block";
-
-        const cache = loadJson(CACHE_KEY, {});
-        const cached = cache[card.dataset.topic];
-        if(cached && (Date.now() - cached.ts) < 10*60*1000 && cached.summary){
-          statusEl.textContent = "キャッシュ";
-          textEl.textContent = cached.summary;
-          renderCitations(cached.citations || []);
-          toast("キャッシュから表示しました");
-          return;
-        }
-
-        setLoading(btn, true);
-        try{
-          saveSettings();
-
-          const token = await getToken();
-          const topic = card.dataset.topic;
-
-          const input = buildWebSummaryPrompt(topic);
-          const conv = await createConversation(token);
-          const resp = await sendConversationMessage(token, conv.id, input);
-
-          const { text, citations } = extractTextAndCitations(resp);
-
-          statusEl.textContent = "完了";
-          textEl.textContent = text || "（要約テキストを取得できませんでした）";
-          renderCitations(citations);
-
-          cache[topic] = { ts: Date.now(), summary: textEl.textContent, citations };
-          saveJson(CACHE_KEY, cache);
-          toast("Copilotで要約しました");
-        } catch(e){
-          const m = String(e?.message || e);
-          statusEl.textContent = "失敗";
-          textEl.textContent =
-            "AI要約に失敗しました。\n" +
-            (m.includes("missing_client_or_tenant") ? "・CLIENT_ID / TENANT_ID を設定してください\n" : "") +
-            (m.includes("not_signed_in") ? "・自動サインインできなかったので、サインインボタンを押してください\n" : "") +
-            (m.includes("redirecting_for_token") ? "・トークン取得のためリダイレクト中です（戻ってきたら再度押してください）\n" : "") +
-            "・権限（scopes）やテナント設定によっては追加設定が必要な場合があります。\n" +
-            "・Chat APIはプレビューで、テキスト応答のみ等の制限があります。[4](https://codingls.com/js/1214/)";
-          renderCitations([]);
-          toast("失敗しました");
-        } finally {
-          setLoading(btn, false);
-        }
-      }
-
-      card.addEventListener("click", async (ev) => {
-        const btn = ev.target.closest("button");
-        if(!btn) return;
-
-        const act = btn.dataset.act;
-        if(act === "toggle"){
-          summaryBox.style.display = (summaryBox.style.display === "none" || !summaryBox.style.display) ? "block" : "none";
-          return;
-        }
-        if(act === "summarize"){
-          await runSummarize(btn);
-          return;
-        }
-      });
-
-      return card;
-    }
-
-    // render & init
-    loadSettings();
-    TOPICS.forEach(t => grid.appendChild(createCard(t)));
-
-    // buttons
-    $("btnSignIn").addEventListener("click", signIn);
-    $("btnSignOut").addEventListener("click", signOut);
-    $("btnClearCache").addEventListener("click", () => {
-      try{ localStorage.removeItem(CACHE_KEY); } catch {}
-      toast("要約キャッシュを削除しました");
-    });
-    $("btnOpenSource").addEventListener("click", () => {
-      window.open(SOURCE_URL, "_blank", "noopener,noreferrer");
-    });
-
-    // 起動時：自動サインインを試す（SSO）[1](https://yorozuroku.com/web-design/html-template/)[2](https://lifestyle.assist-all.co.jp/yahoo-twitter-realtime-search-trend-ranking-tips/)
-    (async () => {
-      try{
-        await tryAutoSignIn();
-      } catch {
-        setSignedInUI(null);
-      }
-    })();
-
-  })();
-  </script>
+  TOPICS.forEach(t => $grid.appendChild(createCard(t)));
+})();
+</script>
 </body>
 </html>
