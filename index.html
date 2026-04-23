@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>今日の注目TOP10（日本）— まとめリンク集</title>
+  <title>今日の注目TOP10（日本）— Yahoo→まとめジャンプ</title>
   <style>
     :root{
       --bg:#0b1220; --panel:#111a2e; --text:#e8eeff; --muted:#9fb0d0;
@@ -83,17 +83,30 @@
     .mono{font-family:var(--mono)}
     a.link{color:var(--brand);text-decoration:none}
     a.link:hover{text-decoration:underline}
-    .footer{color:var(--muted);font-size:12px;line-height:1.55;margin-top:14px}
+    .toast{
+      position:fixed; right:18px; bottom:18px;
+      background: rgba(17,26,46,.92);
+      border:1px solid var(--line);
+      border-radius: 16px;
+      padding: 10px 12px;
+      box-shadow: var(--shadow);
+      color: var(--text);
+      display:none;
+      max-width: 420px;
+      font-size:13px;
+      z-index: 999;
+      white-space:pre-wrap;
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <div>
-        <h1>今日の注目TOP10（日本）— まとめリンク集</h1>
+        <h1>今日の注目TOP10（日本）— Yahoo→まとめジャンプ</h1>
         <div class="sub">
-          ログイン不要。各トピックからニュース/トレンドの「まとめ」ページへ飛びます。<br/>
-          Googleニュース（RSS見出し）、X検索、トレンド一覧などをワンタップで開けます。[1](https://tweetan.dtn.jp/)[2](https://qiita.com/ken1math/items/dd5349f4caf84cb07d5c)[3](https://jp.trend-calendar.com/)[4](https://trends.google.co.jp/trending)[5](https://twittrend.jp/)
+          「Yahoo→まとめへ」を押すと、<br/>
+          ① Yahoo!ニュース検索（新しいタブ）を開き、② 今のタブを“まとめサイト”へ移動します。[1](https://tweetan.dtn.jp/)
         </div>
       </div>
       <div class="badge">
@@ -104,25 +117,20 @@
     <section class="panel">
       <div class="row">
         <div class="hint">
-          ・Googleニュースは検索RSS（見出し一覧）に飛びます（URLの法則を使います）。[1](https://tweetan.dtn.jp/)<br/>
-          ・Xは検索URL（q=）で開きます。[2](https://qiita.com/ken1math/items/dd5349f4caf84cb07d5c)
+          ・Yahoo!ニュース検索は <span class="mono">news.yahoo.co.jp/search?p=...</span> 形式で検索語を渡せます。[1](https://tweetan.dtn.jp/)<br/>
+          ・“まとめサイト”は例として <span class="mono">bing.com/news/search?q=...&format=rss</span> を使っています（ログイン不要）。<br/>
+          ・X検索は <span class="mono">x.com/search?q=...</span> をそのまま使います。[2](https://blog.jbs.co.jp/entry/2023/02/21/114429)
         </div>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
           <a class="btn small primary" href="https://jp.trend-calendar.com/" target="_blank" rel="noopener noreferrer">トレンドカレンダー ↗</a>
-          <a class="btn small" href="https://trends.google.co.jp/trending" target="_blank" rel="noopener noreferrer">Googleトレンド 急上昇 ↗</a>
           <a class="btn small" href="https://twittrend.jp/" target="_blank" rel="noopener noreferrer">Twittrend（Xトレンド）↗</a>
+          <a class="btn small" href="https://trends.google.co.jp/trending" target="_blank" rel="noopener noreferrer">Googleトレンド 急上昇 ↗</a>
         </div>
-      </div>
-      <div class="footer">
-        トレンドカレンダー（ランキング元）: <a class="link" href="https://jp.trend-calendar.com/" target="_blank" rel="noopener noreferrer">https://jp.trend-calendar.com/</a> [3](https://jp.trend-calendar.com/)
       </div>
     </section>
 
     <main class="grid" id="grid"></main>
-
-    <div class="footer">
-      ※「Googleニュース（RSS）」はXML表示になりますが、見出しのまとまりを最短で確認できます。[1](https://tweetan.dtn.jp/)
-    </div>
+    <div class="toast" id="toast"></div>
   </div>
 
 <script>
@@ -142,29 +150,60 @@
     { rank:10, word: "八村塁" }
   ];
 
-  const $grid = document.getElementById("grid");
+  const grid = document.getElementById("grid");
+  const toastEl = document.getElementById("toast");
 
   const esc = (s)=>String(s)
     .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
     .replaceAll('"',"&quot;").replaceAll("'","&#039;");
 
-  // Googleニュース検索RSS（キーワード検索）のURL法則 [1](https://tweetan.dtn.jp/)
-  function googleNewsRss(q){
-    return `https://news.google.com/news/rss/search/section/q/${encodeURIComponent(q)}?hl=ja&gl=JP&ned=jp`;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.style.display = "block";
+    clearTimeout(toastEl._t);
+    toastEl._t = setTimeout(()=> toastEl.style.display="none", 2600);
   }
 
-  // X 検索URL（q=） [2](https://qiita.com/ken1math/items/dd5349f4caf84cb07d5c)
+  // Yahoo!ニュース検索（p=）[1](https://tweetan.dtn.jp/)
+  function yahooNewsSearch(q){
+    return `https://news.yahoo.co.jp/search?p=${encodeURIComponent(q)}`;
+  }
+
+  // まとめサイト（例：Bing News RSS）
+  function summarySite(q){
+    return `https://www.bing.com/news/search?q=${encodeURIComponent(q)}&format=rss`;
+  }
+
+  // X検索（q=）[2](https://blog.jbs.co.jp/entry/2023/02/21/114429)
   function xSearch(q){
-    // 例として f=live（最新）を付ける。q は encodeURIComponent で安全化
     const query = encodeURIComponent(`${q} lang:ja`);
     return `https://x.com/search?q=${query}&f=live&src=typed_query`;
   }
 
+  // ★ 1ファイルで「Yahooを新タブ→このタブはまとめへ」
+  function openYahooAndJumpSummary(topic){
+    const y = yahooNewsSearch(topic);
+    const s = summarySite(topic);
+
+    // 新しいタブでYahoo検索を開く（ポップアップブロックされる場合あり）
+    const w = window.open(y, "_blank", "noopener,noreferrer");
+
+    // すぐにこのタブをまとめへ移動
+    setTimeout(() => { location.href = s; }, 120);
+
+    if(!w){
+      toast(
+        "ポップアップがブロックされた可能性があります。\n" +
+        "下のリンクから開いてください：\n" + y
+      );
+    }
+  }
+
   function createCard(t){
     const topic = t.word;
-    const el = document.createElement("section");
-    el.className = "card";
-    el.innerHTML = `
+    const card = document.createElement("section");
+    card.className = "card";
+    card.innerHTML = `
       <div class="head">
         <div class="left">
           <div class="rank">${t.rank}</div>
@@ -174,23 +213,29 @@
           </div>
         </div>
         <div class="actions">
-          <a class="btn small primary" href="${googleNewsRss(topic)}" target="_blank" rel="noopener noreferrer">Googleニュース（RSS）↗</a>
+          <button class="btn small primary" data-act="jump">Yahoo→まとめへ ↗</button>
           <a class="btn small" href="${xSearch(topic)}" target="_blank" rel="noopener noreferrer">Xで検索 ↗</a>
         </div>
       </div>
-
       <div class="hint">
-        追加で見る：
-        <a class="link" href="https://jp.trend-calendar.com/" target="_blank" rel="noopener noreferrer">トレンドカレンダー</a> /
-        <a class="link" href="https://trends.google.co.jp/trending" target="_blank" rel="noopener noreferrer">Googleトレンド急上昇</a> /
-        <a class="link" href="https://twittrend.jp/" target="_blank" rel="noopener noreferrer">Twittrend</a>
+        「Yahoo→まとめへ」＝ Yahoo!ニュース検索（新タブ）＋まとめサイト（このタブ）へ移動
       </div>
     `;
-    return el;
+
+    card.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("button");
+      if(!btn) return;
+      if(btn.dataset.act === "jump"){
+        openYahooAndJumpSummary(topic);
+      }
+    });
+
+    return card;
   }
 
-  TOPICS.forEach(t => $grid.appendChild(createCard(t)));
+  TOPICS.forEach(t => grid.appendChild(createCard(t)));
 })();
 </script>
 </body>
 </html>
+``
