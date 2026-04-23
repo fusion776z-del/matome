@@ -1,93 +1,78 @@
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>今日の注目TOP10（日本）— Yahoo!トレンド</title>
-  <style>
-    :root{--bg:#0b1220;--panel:#111a2e;--text:#e8eeff;--muted:#9fb0d0;--line:rgba(255,255,255,.12);--radius:18px;--sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",Arial,sans-serif;}
-    *{box-sizing:border-box}
-    body{margin:0;font-family:var(--sans);color:var(--text);background:var(--bg)}
-    .wrap{max-width:1100px;margin:0 auto;padding:20px}
-    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-    h1{margin:0;font-size:20px}
-    .badge{font-size:12px;color:var(--muted)}
-    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-    @media (max-width:900px){.grid{grid-template-columns:1fr}}
-    .card{border:1px solid var(--line);background:var(--panel);border-radius:var(--radius);padding:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-    .rank{font-weight:800;font-size:18px;line-height:1}
-    .topic{margin:6px 0 0;font-size:16px;font-weight:800;word-break:break-word}
-    .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-    .btn{border:1px solid var(--line);background:transparent;color:var(--text);padding:6px 10px;border-radius:10px;text-decoration:none;font-size:12px;cursor:pointer}
-    .btn.primary{border-color:rgba(110,168,255,.55)}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>経済・科学｜注目トピックス（Yahoo!）</title>
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--text:#e8eeff;--line:rgba(255,255,255,.12)}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Noto Sans JP,Meiryo,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+.wrap{max-width:800px;margin:0 auto;padding:16px}
+header{position:sticky;top:0;background:var(--bg);padding-bottom:12px}
+h1{font-size:18px;margin:0 0 4px}
+.sub{font-size:12px;opacity:.75}
+.grid{display:grid;grid-template-columns:1fr;gap:14px}
+.card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:16px;
+}
+.card h2{margin:0 0 12px;font-size:16px}
+.btn{
+  display:block;
+  width:100%;
+  text-align:center;
+  padding:18px;
+  border-radius:16px;
+  font-size:18px;
+  font-weight:700;
+  border:1px solid var(--line);
+  text-decoration:none;
+  color:var(--text);
+  background:rgba(255,255,255,.08);
+}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <h1>今日の注目TOP10（日本）</h1>
-      <div class="badge" id="updated">—</div>
-    </header>
-    <main class="grid" id="grid"></main>
-  </div>
 
-<script>
-(async()=>{
-  const TRENDS_PROXY = 'https://r.jina.ai/https://trend.yahoo.co.jp/archives/178';
-  const grid = document.getElementById('grid');
-  const updated = document.getElementById('updated');
+<div class="wrap">
+<header>
+<h1>経済・科学｜注目トピックス</h1>
+<div class="sub">Yahoo!ニュースが選定する注目分野のみ</div>
+</header>
 
-  const esc = (s)=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+<main class="grid">
 
-  // 元記事の深掘り
-  const yahooNewsSearch = (q)=>`https://news.yahoo.co.jp/search?p=${encodeURIComponent(q)}`;
-  const xSearch = (q)=>`https://x.com/search?q=${encodeURIComponent(q)}&f=live`;
+<section class="card">
+<h2>🇯🇵 経済（注目トピックス）</h2>
+<a class="btn" href="https://news.yahoo.co.jp/topics/business" target="_blank" rel="noopener">
+Yahoo!で開く
+</a>
+</section>
 
-  // 「まとめサイト」相当（ニュースを集約して読めるページ）
-  const googleNewsSearch = (q)=>`https://news.google.com/search?q=${encodeURIComponent(q)}&hl=ja&gl=JP&ceid=JP:ja`;
-  const bingNewsSearch = (q)=>`https://www.bing.com/news/search?q=${encodeURIComponent(q)}&mkt=ja-JP`;
+<section class="card">
+<h2>🔬 科学（注目トピックス）</h2>
+<a class="btn" href="https://news.yahoo.co.jp/topics/science" target="_blank" rel="noopener">
+Yahoo!で開く
+</a>
+</section>
 
-  async function fetchTop10(){
-    const res = await fetch(TRENDS_PROXY, { cache: 'no-store' });
-    const txt = await res.text();
-    const re = /「([^」]{1,60})」/g;
-    const out=[]; let m;
-    while((m=re.exec(txt))!==null && out.length<10){
-      const w = (m[1]||'').trim();
-      if(w && !out.includes(w)) out.push(w);
-    }
-    return out;
-  }
+<section class="card">
+<h2>🌍 世界・国際（注目トピックス）</h2>
+<a class="btn" href="https://news.yahoo.co.jp/topics/world" target="_blank" rel="noopener">
+Yahoo!で開く
+</a>
+</section>
 
-  function render(words){
-    grid.innerHTML='';
-    words.forEach((w,i)=>{
-      const el = document.createElement('section');
-      el.className='card';
-      el.innerHTML = `
-        <div>
-          <div class="rank">${i+1}</div>
-          <div class="topic">${esc(w)}</div>
-        </div>
-        <div class="actions">
-          <a class="btn" href="${yahooNewsSearch(w)}" target="_blank" rel="noopener noreferrer">Yahooニュース</a>
-          <a class="btn" href="${xSearch(w)}" target="_blank" rel="noopener noreferrer">X</a>
-          <a class="btn primary" href="${googleNewsSearch(w)}" target="_blank" rel="noopener noreferrer">まとめ(Google)</a>
-          <a class="btn" href="${bingNewsSearch(w)}" target="_blank" rel="noopener noreferrer">まとめ(Bing)</a>
-        </div>
-      `;
-      grid.appendChild(el);
-    });
-  }
+</main>
+</div>
 
-  try{
-    const list = await fetchTop10();
-    render(list);
-    updated.textContent = new Date().toLocaleString();
-  }catch(e){
-    render(['取得失敗']);
-  }
-})();
-</script>
 </body>
 </html>
