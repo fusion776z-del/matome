@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>今日の注目TOP10（日本）— AI要約（Copilot）</title>
+  <title>今日の注目TOP10（日本）— AI要約（Copilot / Web）</title>
   <style>
     :root{
       --bg:#0b1220; --panel:#111a2e; --text:#e8eeff; --muted:#9fb0d0;
       --line:rgba(255,255,255,.12); --shadow:0 18px 45px rgba(0,0,0,.38);
-      --radius:18px; --brand:#6ea8ff; --ok:#2dd4bf; --warn:#fbbf24; --bad:#fb7185;
+      --radius:18px; --brand:#6ea8ff; --warn:#fbbf24; --ok:#2dd4bf;
       --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP",
               "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", Arial, sans-serif;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -22,10 +22,7 @@
       min-height:100vh;
     }
     .wrap{max-width:1100px; margin:0 auto; padding:22px}
-    header{
-      display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:12px;
-      margin:6px 0 16px;
-    }
+    header{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:12px; margin:6px 0 14px;}
     h1{margin:0; font-size:22px; letter-spacing:.2px}
     .sub{color:var(--muted); font-size:13px; line-height:1.55; margin-top:6px}
     .badge{
@@ -33,11 +30,16 @@
       border:1px solid var(--line); background:rgba(255,255,255,.05);
       padding:8px 10px; border-radius:999px; color:var(--muted); font-size:12px;
     }
-    .topbar{
-      display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
+    .panel{
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:14px;
       margin: 10px 0 14px;
     }
-    .hint{ color:var(--muted); font-size:12px; line-height:1.55; }
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between}
+    .hint{color:var(--muted); font-size:12px; line-height:1.55}
     .btn{
       border:1px solid var(--line);
       background: rgba(255,255,255,.06);
@@ -48,6 +50,7 @@
       transition:.15s ease;
       display:inline-flex; align-items:center; gap:8px;
       user-select:none;
+      white-space:nowrap;
     }
     .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.09)}
     .btn.primary{
@@ -57,7 +60,7 @@
     .btn.small{padding:7px 10px;border-radius:12px;font-size:12px}
     .btn.warn{border-color: rgba(251,191,36,.55); background: rgba(251,191,36,.12)}
     .btn.ok{border-color: rgba(45,212,191,.55); background: rgba(45,212,191,.13)}
-    .grid{ display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; }
+    .grid{display:grid; grid-template-columns: repeat(2, 1fr); gap:12px;}
     @media (max-width: 900px){ .grid{grid-template-columns:1fr} }
 
     .card{
@@ -68,25 +71,19 @@
       padding:14px;
       display:flex; flex-direction:column; gap:10px;
     }
-    .head{
-      display:flex; gap:10px; align-items:flex-start; justify-content:space-between;
-    }
-    .left{
-      display:flex; gap:10px; align-items:flex-start;
-      min-width:0;
-    }
+    .head{display:flex; gap:10px; align-items:flex-start; justify-content:space-between;}
+    .left{display:flex; gap:10px; align-items:flex-start; min-width:0;}
     .rank{
       width:34px; height:34px; border-radius:12px;
       display:grid; place-items:center;
       background: rgba(110,168,255,.16);
       border:1px solid rgba(110,168,255,.35);
-      color: var(--text);
       font-weight:800;
       flex:0 0 auto;
     }
-    .topic{ margin:0; font-size:16px; font-weight:800; line-height:1.35; word-break:break-word; }
-    .meta{ color:var(--muted); font-size:12px; margin-top:4px; }
-    .actions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; flex:0 0 auto; }
+    .topic{margin:0; font-size:16px; font-weight:800; line-height:1.35; word-break:break-word;}
+    .meta{color:var(--muted); font-size:12px; margin-top:4px;}
+    .actions{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; flex:0 0 auto;}
 
     .summary{
       border:1px solid var(--line);
@@ -95,32 +92,23 @@
       padding: 10px 12px;
       display:none;
     }
-    .summary .label{
+    .label{
       font-size:12px; color:var(--muted);
       display:flex; justify-content:space-between; gap:10px; align-items:center;
       margin-bottom:6px;
     }
-    .summary .text{
+    .text{
       font-size:13px; line-height:1.65; color:rgba(232,238,255,.92);
       white-space:pre-wrap;
     }
     .mono{font-family:var(--mono)}
-    a.link{ color: var(--brand); text-decoration:none; }
+    a.link{color: var(--brand); text-decoration:none}
     a.link:hover{text-decoration:underline}
 
-    .settings{
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.03);
-      border-radius: 16px;
-      padding: 12px;
-      margin: 12px 0;
+    .formgrid{
+      display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;
     }
-    .settings-grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-    }
-    @media (max-width: 900px){ .settings-grid{grid-template-columns:1fr} }
+    @media (max-width: 900px){ .formgrid{grid-template-columns:1fr} }
     input, textarea{
       width:100%;
       border:1px solid var(--line);
@@ -131,6 +119,7 @@
       outline:none;
     }
     textarea{min-height:92px; resize:vertical}
+
     .toast{
       position:fixed; right:18px; bottom:18px;
       background: rgba(17,26,46,.92);
@@ -150,10 +139,9 @@
   <div class="wrap">
     <header>
       <div>
-        <h1>今日の注目TOP10（日本）— AI要約（Copilot）</h1>
+        <h1>今日の注目TOP10（日本）— AI要約（Copilot / Web）</h1>
         <div class="sub">
-          「AI要約（Copilot）」を押すと、Googleニュース検索RSSの見出し一覧を材料に
-          Microsoft 365 Copilot Chat API（プレビュー）で要約します。[4](https://zenn.dev/nuinui/articles/dd65428326799e)[2](https://qiita.com/Biwakonosoko/items/6081d2ceef6476407cea)[3](https://docs.github.com/)
+          CopilotがWeb情報を参照して「いい感じに」要約し、可能なら参照URL（attributions）も表示します。Chat APIはプレビューでテキスト応答のみ等の制限があります。[4](https://codingls.com/js/1214/)
         </div>
       </div>
       <div class="badge">
@@ -161,21 +149,22 @@
       </div>
     </header>
 
-    <div class="settings">
-      <div class="topbar">
+    <section class="panel">
+      <div class="row">
         <div class="hint">
-          ・AI要約は Microsoft Graph 経由の Copilot Chat API（プレビュー）を使います。[2](https://qiita.com/Biwakonosoko/items/6081d2ceef6476407cea)<br/>
-          ・サインイン（Entra ID）が必要です（APIキー不要）。<br/>
-          ・要約材料は Googleニュース検索RSS（見出し）です。[4](https://zenn.dev/nuinui/articles/dd65428326799e)
+          ・スマホは popup が制限されやすいので、サインインは redirect 優先にしています（MSALの推奨）。[1](https://yorozuroku.com/web-design/html-template/)<br/>
+          ・SSO（自動サインイン）は、EntraのセッションCookieとMSALキャッシュを利用して試行します（ssoSilent など）。[2](https://lifestyle.assist-all.co.jp/yahoo-twitter-realtime-search-trend-ranking-tips/)<br/>
+          ・Copilot会話は Graph の <span class="mono">/beta/copilot/conversations</span> を使う例の形です。[3](https://mk196790903.com/github-pages-%e3%81%a7%e3%82%b5%e3%82%a4%e3%83%88%e3%82%92%e5%85%ac%e9%96%8b%e3%81%99%e3%82%8b%e6%89%8b%e9%a0%86%e3%80%90%e5%88%9d%e5%bf%83%e8%80%85%e3%81%a7%e3%82%825%e3%82%b9%e3%83%86%e3%83%83/)
         </div>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
           <button class="btn small primary" id="btnSignIn">サインイン</button>
           <button class="btn small" id="btnSignOut">サインアウト</button>
           <button class="btn small warn" id="btnClearCache">要約キャッシュ削除</button>
+          <button class="btn small" id="btnOpenSource">ランキング出典を開く</button>
         </div>
       </div>
 
-      <div class="settings-grid">
+      <div class="formgrid">
         <div>
           <div class="sub" style="margin:0 0 6px;">CLIENT_ID（Entraアプリ）</div>
           <input id="clientId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
@@ -188,33 +177,31 @@
           <div class="sub" style="margin:0 0 6px;">Scopes（カンマ区切り）</div>
           <input id="scopes" value="User.Read" />
           <div class="hint" style="margin-top:6px;">
-            ※必要な権限はテナント設定次第です。例として会話作成→送信の形は <span class="mono">/beta/copilot/conversations</span> を使う例が公開されています。[3](https://docs.github.com/)
+            ※必要な権限はテナント設定次第です。まずはこのままで試して、エラーが出たら増やしてください。
           </div>
         </div>
         <div>
           <div class="sub" style="margin:0 0 6px;">サインイン状態</div>
-          <div class="badge" id="who">未サインイン</div>
+          <div class="badge mono" id="who">自動サインイン試行中…</div>
         </div>
       </div>
 
       <div style="margin-top:10px;">
-        <div class="sub" style="margin:0 0 6px;">要約プロンプト</div>
+        <div class="sub" style="margin:0 0 6px;">要約プロンプト（自由に調整OK）</div>
         <textarea id="prompt"></textarea>
       </div>
-    </div>
+    </section>
 
     <main class="grid" id="grid"></main>
-
     <div class="toast" id="toast"></div>
   </div>
 
-  <!-- MSAL (ブラウザ) -->
+  <!-- MSAL (browser) -->
   <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.20.0/lib/msal-browser.min.js"></script>
 
   <script>
   (() => {
-    // 出典: トレンドカレンダー「Googleトレンドワードランキング」(2026/04/23 01:45 更新) 上位10件
-    // https://jp.trend-calendar.com/
+    // 出典: トレンドカレンダー「Googleトレンドワードランキング」(2026/04/23 01:45 更新)
     const SOURCE_URL = "https://jp.trend-calendar.com/";
     const SOURCE_UPDATED = "2026-04-23 01:45";
 
@@ -231,21 +218,23 @@
       { rank:10, word: "八村塁" }
     ];
 
-    const CACHE_KEY = "topic-ai-summary-cache.v1"; // { "<topic>": {ts, summary, headlines} }
-    const SETTINGS_KEY = "copilot-ai-summary-settings.v1";
+    // localStorage keys
+    const SETTINGS_KEY = "copilot-websummary-settings.v2";
+    const CACHE_KEY = "copilot-websummary-cache.v2"; // { "<topic>": {ts, summary, citations} }
 
     const grid = document.getElementById("grid");
     const toastEl = document.getElementById("toast");
     const whoEl = document.getElementById("who");
-
     const $ = (id) => document.getElementById(id);
 
-    const escHtml = (s) => String(s)
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
+    function escapeHTML(s){
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
 
     function toast(msg){
       toastEl.textContent = msg;
@@ -265,17 +254,15 @@
 
     function defaultPrompt(){
       return [
-        "あなたはニュース編集者です。",
-        "以下の「見出し一覧」だけを根拠に、トピックが何で注目されているかを日本語で要約してください。",
+        "次のトピックについて、Web情報（最新の公開情報）を参照して要約してください。",
         "",
-        "出力ルール:",
-        "1) まず120〜200字で全体要約（断定しすぎず、見出しから分かる範囲）",
-        "2) 次に重要ポイントを3つ（箇条書き）",
-        "3) 最後に『追うべき追加キーワード』を3つ（箇条書き）",
+        "出力形式（必ずこの順で）：",
+        "1) 120〜200字の要約",
+        "2) 重要ポイント3つ（箇条書き）",
+        "3) 参照したWebページURLを3件（可能なら）",
         "",
-        "制約:",
-        "- 見出しに無い事実を作らない",
-        "- 不明は「不明」「要確認」",
+        "制約：推測で事実を作らない。不明は『不明』『要確認』。",
+        "注意：個人情報や機密情報は含めない。"
       ].join("\n");
     }
 
@@ -285,40 +272,25 @@
       $("tenantId").value = s.tenantId || "";
       $("scopes").value = s.scopes || "User.Read";
       $("prompt").value = s.prompt || defaultPrompt();
+      return s;
     }
-    function saveSettings(){
-      const s = {
+    function saveSettings(extra){
+      const s0 = loadJson(SETTINGS_KEY, {});
+      const s = Object.assign({}, s0, {
         clientId: $("clientId").value.trim(),
         tenantId: $("tenantId").value.trim(),
         scopes: $("scopes").value.trim(),
         prompt: $("prompt").value
-      };
+      }, extra || {});
       saveJson(SETTINGS_KEY, s);
+      return s;
     }
 
-    // ---- Google News Search RSS URL (見出し収集) ----
-    // 形式例: https://news.google.com/news/rss/search/section/q/<keyword>?hl=ja&gl=JP&ned=jp
-    function googleNewsSearchRssUrl(q){
-      return `https://news.google.com/news/rss/search/section/q/${encodeURIComponent(q)}?hl=ja&gl=JP&ned=jp`;
+    function isMobile(){
+      return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     }
 
-    async function fetchRssHeadlines(topic, limit=8){
-      const url = googleNewsSearchRssUrl(topic);
-      const res = await fetch(url, { headers: { "accept": "application/rss+xml, application/xml;q=0.9, */*;q=0.8" }});
-      if(!res.ok) throw new Error("rss_fetch_failed");
-      const xmlText = await res.text();
-      const doc = new DOMParser().parseFromString(xmlText, "text/xml");
-      const items = Array.from(doc.querySelectorAll("item")).slice(0, limit);
-      return items.map(it => {
-        const title = it.querySelector("title")?.textContent?.trim() || "";
-        const link  = it.querySelector("link")?.textContent?.trim()  || "";
-        const source = it.querySelector("source")?.textContent?.trim() || "";
-        return { title, link, source };
-      }).filter(x => x.title);
-    }
-
-    // ---- Copilot Chat API (Microsoft Graph beta) ----
-    // 会話作成→メッセージ送信の形（例）: /beta/copilot/conversations [3](https://docs.github.com/)
+    // ---- MSAL / Auth ----
     let msalApp = null;
     let activeAccount = null;
 
@@ -333,48 +305,131 @@
           authority: `https://login.microsoftonline.com/${tenantId}`,
           redirectUri: location.href.split("#")[0]
         },
+        // 同一ドメインでのSSOにlocalStorageが有効（MSALのSSO説明）[2](https://lifestyle.assist-all.co.jp/yahoo-twitter-realtime-search-trend-ranking-tips/)
         cache: { cacheLocation: "localStorage" }
       };
       msalApp = new msal.PublicClientApplication(config);
       return msalApp;
     }
 
+    function setSignedInUI(account){
+      if(account){
+        whoEl.textContent = `Signed in: ${account.username}`;
+        whoEl.classList.add("mono");
+      } else {
+        whoEl.textContent = "未サインイン";
+      }
+    }
+
     async function signIn(){
       if(!msalApp) buildMsal();
       const scopes = $("scopes").value.split(",").map(s=>s.trim()).filter(Boolean);
-      const resp = await msalApp.loginPopup({ scopes });
-      activeAccount = resp.account;
-      msalApp.setActiveAccount(activeAccount);
-      whoEl.textContent = `Signed in: ${activeAccount.username}`;
-      whoEl.classList.add("mono");
-      saveSettings();
-      toast("サインインしました");
+      const req = { scopes };
+
+      // スマホは redirect 優先（popupが制限されやすい）[1](https://yorozuroku.com/web-design/html-template/)
+      if(isMobile()){
+        await msalApp.loginRedirect(req);
+        return;
+      } else {
+        const resp = await msalApp.loginPopup(req);
+        activeAccount = resp.account;
+        msalApp.setActiveAccount(activeAccount);
+        saveSettings({ lastLoginHint: activeAccount?.username || "" });
+        setSignedInUI(activeAccount);
+        toast("サインインしました");
+      }
     }
 
     async function signOut(){
       if(!msalApp) return;
       const acc = msalApp.getActiveAccount() || activeAccount;
       if(!acc) return;
-      await msalApp.logoutPopup({ account: acc });
+      if(isMobile()){
+        await msalApp.logoutRedirect({ account: acc });
+      } else {
+        await msalApp.logoutPopup({ account: acc });
+      }
       activeAccount = null;
-      whoEl.textContent = "未サインイン";
+      setSignedInUI(null);
       toast("サインアウトしました");
     }
 
+    // 自動サインイン（SSO）：
+    // - redirect戻り処理 handleRedirectPromise
+    // - getAllAccountsでキャッシュ参照
+    // - それでも無ければ ssoSilent を試す（EntraセッションCookieがあれば無操作で入れる可能性）[1](https://yorozuroku.com/web-design/html-template/)[2](https://lifestyle.assist-all.co.jp/yahoo-twitter-realtime-search-trend-ranking-tips/)
+    async function tryAutoSignIn(){
+      if(!msalApp) buildMsal();
+
+      // redirectフローの戻り処理（redirect方式では必須）[1](https://yorozuroku.com/web-design/html-template/)
+      let redirectResp = null;
+      try{
+        redirectResp = await msalApp.handleRedirectPromise();
+      } catch {}
+
+      if(redirectResp?.account){
+        activeAccount = redirectResp.account;
+        msalApp.setActiveAccount(activeAccount);
+        saveSettings({ lastLoginHint: activeAccount?.username || "" });
+        setSignedInUI(activeAccount);
+        return true;
+      }
+
+      // 既存キャッシュからアカウントを拾う（同一アプリ/同一ドメインSSO）[2](https://lifestyle.assist-all.co.jp/yahoo-twitter-realtime-search-trend-ranking-tips/)
+      const acc = msalApp.getActiveAccount?.() || msalApp.getAllAccounts?.()?.[0] || activeAccount;
+      if(acc){
+        activeAccount = acc;
+        msalApp.setActiveAccount(acc);
+        setSignedInUI(acc);
+        return true;
+      }
+
+      // ssoSilent（成功すればボタン押さずに入る）[2](https://lifestyle.assist-all.co.jp/yahoo-twitter-realtime-search-trend-ranking-tips/)
+      const s = loadJson(SETTINGS_KEY, {});
+      const hint = s.lastLoginHint;
+      try{
+        const ssoReq = hint ? { loginHint: hint } : {};
+        const ssoResp = await msalApp.ssoSilent(ssoReq);
+        if(ssoResp?.account){
+          activeAccount = ssoResp.account;
+          msalApp.setActiveAccount(activeAccount);
+          saveSettings({ lastLoginHint: activeAccount?.username || "" });
+          setSignedInUI(activeAccount);
+          return true;
+        }
+      } catch {
+        // ブラウザ制約等でsilentが失敗してもOK
+      }
+
+      setSignedInUI(null);
+      return false;
+    }
+
+    // トークン取得：まず silent、ダメなら必要に応じて interactive
     async function getToken(){
       if(!msalApp) buildMsal();
+
       const scopes = $("scopes").value.split(",").map(s=>s.trim()).filter(Boolean);
-      const account = msalApp.getActiveAccount() || activeAccount;
+      const account = msalApp.getActiveAccount?.() || activeAccount || msalApp.getAllAccounts?.()?.[0];
       if(!account) throw new Error("not_signed_in");
+
       try{
         const res = await msalApp.acquireTokenSilent({ scopes, account });
         return res.accessToken;
-      } catch {
-        const res = await msalApp.acquireTokenPopup({ scopes });
-        return res.accessToken;
+      } catch(e){
+        // interaction required の場合、スマホは redirect、PCは popup
+        if(isMobile()){
+          await msalApp.acquireTokenRedirect({ scopes, account });
+          throw new Error("redirecting_for_token");
+        } else {
+          const res = await msalApp.acquireTokenPopup({ scopes, account });
+          return res.accessToken;
+        }
       }
     }
 
+    // ---- Copilot Chat API (Graph beta) ----
+    // 会話作成→メッセージ送信 (例) [3](https://mk196790903.com/github-pages-%e3%81%a7%e3%82%b5%e3%82%a4%e3%83%88%e3%82%92%e5%85%ac%e9%96%8b%e3%81%99%e3%82%8b%e6%89%8b%e9%a0%86%e3%80%90%e5%88%9d%e5%bf%83%e8%80%85%e3%81%a7%e3%82%825%e3%82%b9%e3%83%86%e3%83%83/)
     async function createConversation(token){
       const res = await fetch("https://graph.microsoft.com/beta/copilot/conversations", {
         method: "POST",
@@ -382,7 +437,7 @@
         body: JSON.stringify({})
       });
       if(!res.ok) throw new Error("create_conversation_failed");
-      return await res.json(); // { id, ... }
+      return await res.json();
     }
 
     async function sendConversationMessage(token, conversationId, text){
@@ -399,13 +454,26 @@
       return await res.json();
     }
 
-    function buildCopilotInput(topic, headlines){
-      const prompt = $("prompt").value || defaultPrompt();
-      const lines = headlines.map((h,i)=>{
-        const src = h.source ? `（${h.source}）` : "";
-        return `${i+1}. ${h.title}${src}`;
-      }).join("\n");
-      return `${prompt}\n\nトピック: ${topic}\n見出し一覧:\n${lines}`;
+    function buildWebSummaryPrompt(topic){
+      const base = $("prompt").value || defaultPrompt();
+      return `${base}\n\nトピック: ${topic}`;
+    }
+
+    function extractTextAndCitations(resp){
+      const msgs = resp?.messages || [];
+      const lastText = [...msgs].reverse().find(m => m?.text && m.text.trim())?.text || "";
+
+      // attributions にURLが入る場合がある（実例あり）[3](https://mk196790903.com/github-pages-%e3%81%a7%e3%82%b5%e3%82%a4%e3%83%88%e3%82%92%e5%85%ac%e9%96%8b%e3%81%99%e3%82%8b%e6%89%8b%e9%a0%86%e3%80%90%e5%88%9d%e5%bf%83%e8%80%85%e3%81%a7%e3%82%825%e3%82%b9%e3%83%86%e3%83%83/)
+      const urls = [];
+      for(const m of msgs){
+        const atts = m.attributions || [];
+        for(const a of atts){
+          const u = a.seeMoreWebUrl || a.webUrl || a.url;
+          if(u) urls.push(u);
+        }
+      }
+      const unique = [...new Set(urls)];
+      return { text: lastText, citations: unique };
     }
 
     function createCard(t){
@@ -418,8 +486,8 @@
           <div class="left">
             <div class="rank">${t.rank}</div>
             <div style="min-width:0">
-              <p class="topic">${escHtml(t.word)}</p>
-              <div class="meta">ランキング更新: <span class="mono">${escHtml(SOURCE_UPDATED)}</span></div>
+              <p class="topic">${escapeHTML(t.word)}</p>
+              <div class="meta">ランキング更新: <span class="mono">${escapeHTML(SOURCE_UPDATED)}</span></div>
             </div>
           </div>
           <div class="actions">
@@ -430,25 +498,25 @@
 
         <div class="summary">
           <div class="label">
-            <span>要約（Copilot）: <span class="mono" data-role="status">未取得</span></span>
+            <span>要約: <span class="mono" data-role="status">未取得</span></span>
             <span><a class="link" href="${SOURCE_URL}" target="_blank" rel="noopener noreferrer">出典 ↗</a></span>
           </div>
           <div class="text" data-role="text">「AI要約（Copilot）」を押すと表示されます。</div>
 
           <div style="height:10px"></div>
           <div class="label">
-            <span>参照した見出し（GoogleニュースRSS）</span>
-            <span class="mono" data-role="hcount">0件</span>
+            <span>参照URL（返ってきた場合）</span>
+            <span class="mono" data-role="ccount">0件</span>
           </div>
-          <div class="text" data-role="heads"></div>
+          <div class="text" data-role="cites"></div>
         </div>
       `;
 
       const summaryBox = card.querySelector(".summary");
       const statusEl = summaryBox.querySelector('[data-role="status"]');
       const textEl = summaryBox.querySelector('[data-role="text"]');
-      const headsEl = summaryBox.querySelector('[data-role="heads"]');
-      const hcountEl = summaryBox.querySelector('[data-role="hcount"]');
+      const citesEl = summaryBox.querySelector('[data-role="cites"]');
+      const ccountEl = summaryBox.querySelector('[data-role="ccount"]');
 
       function setLoading(btn, on){
         if(on){
@@ -461,24 +529,28 @@
         }
       }
 
-      function renderHeadlines(headlines){
-        hcountEl.textContent = `${headlines.length}件`;
-        headsEl.textContent = headlines.map((h,i)=>{
-          const src = h.source ? `（${h.source}）` : "";
-          return `${i+1}. ${h.title}${src}`;
-        }).join("\n");
+      function renderCitations(urls){
+        const list = (urls || []).slice(0, 6);
+        ccountEl.textContent = `${list.length}件`;
+        if(!list.length){
+          citesEl.textContent = "（参照URLは返りませんでした）";
+          return;
+        }
+        citesEl.innerHTML = list.map(u => {
+          const safe = escapeHTML(u);
+          return `<a class="link" href="${safe}" target="_blank" rel="noopener noreferrer">${safe}</a>`;
+        }).join("<br/>");
       }
 
       async function runSummarize(btn){
         summaryBox.style.display = "block";
 
-        // cache (10分)
         const cache = loadJson(CACHE_KEY, {});
         const cached = cache[card.dataset.topic];
         if(cached && (Date.now() - cached.ts) < 10*60*1000 && cached.summary){
           statusEl.textContent = "キャッシュ";
           textEl.textContent = cached.summary;
-          renderHeadlines(cached.headlines || []);
+          renderCitations(cached.citations || []);
           toast("キャッシュから表示しました");
           return;
         }
@@ -487,30 +559,20 @@
         try{
           saveSettings();
 
-          const token = await getToken(); // サインイン必須
+          const token = await getToken();
           const topic = card.dataset.topic;
 
-          const headlines = await fetchRssHeadlines(topic, 8);
-          renderHeadlines(headlines);
-
-          if(headlines.length === 0){
-            statusEl.textContent = "失敗";
-            textEl.textContent = "見出しを取得できませんでした（RSS結果が空）。";
-            return;
-          }
-
-          const input = buildCopilotInput(topic, headlines);
+          const input = buildWebSummaryPrompt(topic);
           const conv = await createConversation(token);
           const resp = await sendConversationMessage(token, conv.id, input);
 
-          // 例のレスポンスでは messages 配列に text が含まれる [3](https://docs.github.com/)
-          const msgs = resp && resp.messages ? resp.messages : [];
-          const lastText = [...msgs].reverse().find(m => m.text && m.text.trim())?.text || "";
+          const { text, citations } = extractTextAndCitations(resp);
 
           statusEl.textContent = "完了";
-          textEl.textContent = lastText || "（要約テキストを取得できませんでした）";
+          textEl.textContent = text || "（要約テキストを取得できませんでした）";
+          renderCitations(citations);
 
-          cache[topic] = { ts: Date.now(), summary: textEl.textContent, headlines };
+          cache[topic] = { ts: Date.now(), summary: textEl.textContent, citations };
           saveJson(CACHE_KEY, cache);
           toast("Copilotで要約しました");
         } catch(e){
@@ -519,9 +581,11 @@
           textEl.textContent =
             "AI要約に失敗しました。\n" +
             (m.includes("missing_client_or_tenant") ? "・CLIENT_ID / TENANT_ID を設定してください\n" : "") +
-            (m.includes("not_signed_in") ? "・先にサインインしてください\n" : "") +
-            (m.includes("rss_fetch_failed") ? "・RSS取得に失敗しました（ネットワーク/CORS等）\n" : "") +
-            "・Copilot Chat APIはプレビューで、テキスト応答のみ等の制限があります。[2](https://qiita.com/Biwakonosoko/items/6081d2ceef6476407cea)";
+            (m.includes("not_signed_in") ? "・自動サインインできなかったので、サインインボタンを押してください\n" : "") +
+            (m.includes("redirecting_for_token") ? "・トークン取得のためリダイレクト中です（戻ってきたら再度押してください）\n" : "") +
+            "・権限（scopes）やテナント設定によっては追加設定が必要な場合があります。\n" +
+            "・Chat APIはプレビューで、テキスト応答のみ等の制限があります。[4](https://codingls.com/js/1214/)";
+          renderCitations([]);
           toast("失敗しました");
         } finally {
           setLoading(btn, false);
@@ -546,17 +610,29 @@
       return card;
     }
 
-    // render
+    // render & init
     loadSettings();
     TOPICS.forEach(t => grid.appendChild(createCard(t)));
 
-    // top buttons
-    $("btnClearCache").addEventListener("click", () => {
-      try{ localStorage.removeItem(CACHE_KEY); }catch{}
-      toast("要約キャッシュを削除しました");
-    });
+    // buttons
     $("btnSignIn").addEventListener("click", signIn);
     $("btnSignOut").addEventListener("click", signOut);
+    $("btnClearCache").addEventListener("click", () => {
+      try{ localStorage.removeItem(CACHE_KEY); } catch {}
+      toast("要約キャッシュを削除しました");
+    });
+    $("btnOpenSource").addEventListener("click", () => {
+      window.open(SOURCE_URL, "_blank", "noopener,noreferrer");
+    });
+
+    // 起動時：自動サインインを試す（SSO）[1](https://yorozuroku.com/web-design/html-template/)[2](https://lifestyle.assist-all.co.jp/yahoo-twitter-realtime-search-trend-ranking-tips/)
+    (async () => {
+      try{
+        await tryAutoSignIn();
+      } catch {
+        setSignedInUI(null);
+      }
+    })();
 
   })();
   </script>
