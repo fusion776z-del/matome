@@ -3,343 +3,90 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>今日の注目TOP10（日本）— 自動更新（Yahoo! JAPAN トレンド）</title>
+  <title>今日の注目TOP10（日本）— Yahoo!トレンド</title>
   <style>
-    :root{
-      --bg:#0b1220; --panel:#111a2e; --text:#e8eeff; --muted:#9fb0d0;
-      --line:rgba(255,255,255,.12); --shadow:0 18px 45px rgba(0,0,0,.38);
-      --radius:18px; --brand:#6ea8ff;
-      --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP",
-              "Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo", Arial, sans-serif;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
-    }
+    :root{--bg:#0b1220;--panel:#111a2e;--text:#e8eeff;--muted:#9fb0d0;--line:rgba(255,255,255,.12);--radius:18px;--sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",Arial,sans-serif;}
     *{box-sizing:border-box}
-    body{
-      margin:0; font-family:var(--sans); color:var(--text);
-      background: radial-gradient(1200px 600px at 10% 0%, rgba(110,168,255,.18), transparent 55%),
-                  radial-gradient(1000px 650px at 100% 20%, rgba(138,92,255,.16), transparent 55%),
-                  linear-gradient(180deg, #070c16, var(--bg));
-      min-height:100vh;
-    }
-    .wrap{max-width:1100px;margin:0 auto;padding:22px}
-    header{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;margin:6px 0 14px}
-    h1{margin:0;font-size:22px}
-    .sub{color:var(--muted);font-size:13px;line-height:1.55;margin-top:6px}
-    .badge{
-      display:inline-flex;align-items:center;gap:8px;
-      border:1px solid var(--line);background:rgba(255,255,255,.05);
-      padding:8px 10px;border-radius:999px;color:var(--muted);font-size:12px
-    }
-    .panel{
-      border:1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding:14px;
-      margin: 10px 0 14px;
-    }
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
-    .hint{color:var(--muted);font-size:12px;line-height:1.55}
-    .btn{
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      padding: 10px 12px;
-      border-radius: 14px;
-      cursor:pointer;
-      transition:.15s ease;
-      display:inline-flex;align-items:center;gap:8px;
-      user-select:none;
-      white-space:nowrap;
-      text-decoration:none;
-    }
-    .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.09)}
-    .btn.primary{
-      border-color: rgba(110,168,255,.45);
-      background: linear-gradient(135deg, rgba(110,168,255,.22), rgba(138,92,255,.20));
-    }
-    .btn.small{padding:7px 10px;border-radius:12px;font-size:12px}
+    body{margin:0;font-family:var(--sans);color:var(--text);background:var(--bg)}
+    .wrap{max-width:1100px;margin:0 auto;padding:20px}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    h1{margin:0;font-size:20px}
+    .badge{font-size:12px;color:var(--muted)}
     .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-    @media (max-width: 900px){ .grid{grid-template-columns:1fr} }
-    .card{
-      border:1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding:14px;
-      display:flex;flex-direction:column;gap:10px;
-    }
-    .head{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
-    .left{display:flex;gap:10px;align-items:flex-start;min-width:0}
-    .rank{
-      width:34px;height:34px;border-radius:12px;display:grid;place-items:center;
-      background: rgba(110,168,255,.16);
-      border:1px solid rgba(110,168,255,.35);
-      font-weight:800;flex:0 0 auto;
-    }
-    .topic{margin:0;font-size:16px;font-weight:800;line-height:1.35;word-break:break-word}
-    .meta{color:var(--muted);font-size:12px;margin-top:4px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    .card{border:1px solid var(--line);background:var(--panel);border-radius:var(--radius);padding:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+    .rank{font-weight:800;font-size:18px;line-height:1}
+    .topic{margin:6px 0 0;font-size:16px;font-weight:800;word-break:break-word}
     .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-    .mono{font-family:var(--mono)}
-    a.link{color:var(--brand);text-decoration:none}
-    a.link:hover{text-decoration:underline}
-    .toast{
-      position:fixed; right:18px; bottom:18px;
-      background: rgba(17,26,46,.92);
-      border:1px solid var(--line);
-      border-radius: 16px;
-      padding: 10px 12px;
-      box-shadow: var(--shadow);
-      color: var(--text);
-      display:none;
-      max-width: 420px;
-      font-size:13px;
-      z-index: 999;
-      white-space:pre-wrap;
-    }
-    .spin{
-      display:inline-block;
-      width:12px;height:12px;border-radius:999px;
-      border:2px solid rgba(255,255,255,.25);
-      border-top-color: rgba(110,168,255,.9);
-      animation: spin .8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .kv{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    input[type=text]{
-      width:min(640px, 100%);
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:rgba(0,0,0,.18);
-      color:var(--text);
-      outline:none;
-      font-family:var(--mono);
-      font-size:12px;
-    }
-    input::placeholder{color:rgba(159,176,208,.7)}
+    .btn{border:1px solid var(--line);background:transparent;color:var(--text);padding:6px 10px;border-radius:10px;text-decoration:none;font-size:12px;cursor:pointer}
+    .btn.primary{border-color:rgba(110,168,255,.55)}
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <div>
-        <h1>今日の注目TOP10（日本）— 自動更新（Yahoo! JAPAN トレンド）</h1>
-        <div class="sub">
-          ページ更新で <span class="mono">Yahoo! JAPAN の「トレンド」ページ</span> から話題ワードを抽出してTOP10を作ります。<br/>
-          トピックは「Yahoo!ニュース検索」と「X検索」へワンタップで飛べます。
-        </div>
-      </div>
-      <div class="badge">
-        <span id="statusIcon" style="display:none" class="spin"></span>
-        <span id="statusText">更新待ち</span>
-        <span>／</span>
-        <span class="mono" id="lastUpdated">—</span>
-      </div>
+      <h1>今日の注目TOP10（日本）</h1>
+      <div class="badge" id="updated">—</div>
     </header>
-
-    <section class="panel">
-      <div class="row">
-        <div class="hint">
-          ・トレンド取得元: <span class="mono">https://trend.yahoo.co.jp/archives/178</span><br/>
-          ・注意: ブラウザから直接はCORS制限で取得できない場合があります。その場合は下の「プロキシURL」を使います。<br/>
-          ・既定のプロキシは <span class="mono">https://r.jina.ai/https://trend.yahoo.co.jp/archives/178</span>（HTMLをテキスト化して取得）
-        </div>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button class="btn small primary" id="btnRefresh">今すぐ更新</button>
-          <a class="btn small" href="https://trend.yahoo.co.jp/archives/178" target="_blank" rel="noopener noreferrer">Yahoo! JAPAN トレンド ↗</a>
-          <a class="btn small" href="https://news.yahoo.co.jp/rss" target="_blank" rel="noopener noreferrer">Yahoo!ニュース RSS一覧 ↗</a>
-        </div>
-      </div>
-      <div style="margin-top:12px" class="kv">
-        <span class="hint">プロキシURL（任意）</span>
-        <input id="proxyUrl" type="text" placeholder="例: https://r.jina.ai/https://trend.yahoo.co.jp/archives/178" />
-        <button class="btn small" id="btnSave">保存</button>
-        <button class="btn small" id="btnReset">既定に戻す</button>
-      </div>
-      <div class="hint" style="margin-top:8px">
-        ※ <span class="mono">Yahoo!ニュース RSS</span> には「個人利用のみ」等の注意事項があります。利用条件に沿ってご利用ください。
-      </div>
-    </section>
-
     <main class="grid" id="grid"></main>
-    <div class="toast" id="toast"></div>
   </div>
 
 <script>
-(() => {
-  // 取得元（Yahoo! JAPAN トレンド）
-  const SOURCE_PAGE = 'https://trend.yahoo.co.jp/archives/178';
-  // 既定プロキシ（テキスト化）
-  const DEFAULT_PROXY = 'https://r.jina.ai/https://trend.yahoo.co.jp/archives/178';
-
-  const CACHE_KEY = 'jp-yahoo-trend-top10.cache.v1';
-  const PROXY_KEY = 'jp-yahoo-trend.proxy.v1';
-
-  const FALLBACK_TOPICS = [
-    '（取得失敗時の例）今日の話題','天気','地震','スポーツ','芸能','経済','交通','映画','ゲーム','音楽'
-  ];
-
+(async()=>{
+  const TRENDS_PROXY = 'https://r.jina.ai/https://trend.yahoo.co.jp/archives/178';
   const grid = document.getElementById('grid');
-  const toastEl = document.getElementById('toast');
-  const statusIcon = document.getElementById('statusIcon');
-  const statusText = document.getElementById('statusText');
-  const lastUpdated = document.getElementById('lastUpdated');
-  const btnRefresh = document.getElementById('btnRefresh');
-  const proxyInput = document.getElementById('proxyUrl');
-  const btnSave = document.getElementById('btnSave');
-  const btnReset = document.getElementById('btnReset');
+  const updated = document.getElementById('updated');
 
-  const esc = (s)=>String(s)
-    .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
-    .replaceAll('"','&quot;').replaceAll("'",'&#39;');
+  const esc = (s)=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
 
-  function toast(msg){
-    toastEl.textContent = msg;
-    toastEl.style.display = 'block';
-    clearTimeout(toastEl._t);
-    toastEl._t = setTimeout(()=> toastEl.style.display='none', 2600);
-  }
-  function setLoading(on, msg){
-    statusIcon.style.display = on ? 'inline-block' : 'none';
-    statusText.textContent = msg || (on ? '更新中' : '更新');
-  }
-  function saveCache(obj){
-    try { localStorage.setItem(CACHE_KEY, JSON.stringify(obj)); } catch {}
-  }
-  function loadCache(){
-    try {
-      const raw = localStorage.getItem(CACHE_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch { return null; }
-  }
-  function saveProxy(url){
-    try{ localStorage.setItem(PROXY_KEY, url); }catch{}
-  }
-  function loadProxy(){
-    try{ return localStorage.getItem(PROXY_KEY) || ''; }catch{ return ''; }
-  }
+  // 元記事の深掘り
+  const yahooNewsSearch = (q)=>`https://news.yahoo.co.jp/search?p=${encodeURIComponent(q)}`;
+  const xSearch = (q)=>`https://x.com/search?q=${encodeURIComponent(q)}&f=live`;
 
-  function yahooNewsSearch(q){
-    return `https://news.yahoo.co.jp/search?p=${encodeURIComponent(q)}`;
-  }
-  function xSearch(q){
-    const query = encodeURIComponent(`${q} lang:ja`);
-    return `https://x.com/search?q=${query}&f=live&src=typed_query`;
-  }
+  // 「まとめサイト」相当（ニュースを集約して読めるページ）
+  const googleNewsSearch = (q)=>`https://news.google.com/search?q=${encodeURIComponent(q)}&hl=ja&gl=JP&ceid=JP:ja`;
+  const bingNewsSearch = (q)=>`https://www.bing.com/news/search?q=${encodeURIComponent(q)}&mkt=ja-JP`;
 
-  function render(topics, updatedLabel){
-    grid.innerHTML = '';
-    (topics || []).slice(0, 10).forEach((word, idx)=>{
-      const rank = idx + 1;
-      const card = document.createElement('section');
-      card.className = 'card';
-      card.innerHTML = `
-        <div class="head">
-          <div class="left">
-            <div class="rank">${rank}</div>
-            <div style="min-width:0">
-              <p class="topic">${esc(word)}</p>
-              <div class="meta">更新: <span class="mono">${esc(updatedLabel || '—')}</span></div>
-            </div>
-          </div>
-          <div class="actions">
-            <a class="btn small primary" href="${yahooNewsSearch(word)}" target="_blank" rel="noopener noreferrer">Yahooニュース検索 ↗</a>
-            <a class="btn small" href="${xSearch(word)}" target="_blank" rel="noopener noreferrer">Xで検索 ↗</a>
-          </div>
-        </div>
-      `;
-      grid.appendChild(card);
-    });
-  }
-
-  // r.jina.ai テキストから「「ワード」」を抽出
-  function parseTopicsFromYahooTrendText(text){
-    const out = [];
+  async function fetchTop10(){
+    const res = await fetch(TRENDS_PROXY, { cache: 'no-store' });
+    const txt = await res.text();
     const re = /「([^」]{1,60})」/g;
-    let m;
-    while((m = re.exec(String(text))) !== null){
-      const w = (m[1] || '').trim();
-      if(!w) continue;
-      if(!out.includes(w)) out.push(w);
-      if(out.length >= 10) break;
+    const out=[]; let m;
+    while((m=re.exec(txt))!==null && out.length<10){
+      const w = (m[1]||'').trim();
+      if(w && !out.includes(w)) out.push(w);
     }
     return out;
   }
 
-  async function fetchTop10(){
-    const custom = (proxyInput.value || '').trim();
-    const url = custom || DEFAULT_PROXY;
-    const res = await fetch(url, { cache: 'no-store' });
-    if(!res.ok) throw new Error('fetch_failed');
-    const ct = res.headers.get('content-type') || '';
-
-    // JSONプロキシ対応: {trends:[...], updated:"..."}
-    if(ct.includes('application/json') || url.endsWith('.json')){
-      const j = await res.json();
-      const topics = (j.trends || j.topics || []).map(String).filter(Boolean).slice(0,10);
-      if(topics.length < 3) throw new Error('json_parse_failed');
-      return { topics, updated: j.updated || j.timestamp || '' };
-    }
-
-    const txt = await res.text();
-    const topics = parseTopicsFromYahooTrendText(txt);
-    if(topics.length < 3) throw new Error('text_parse_failed');
-    return { topics, updated: '' };
+  function render(words){
+    grid.innerHTML='';
+    words.forEach((w,i)=>{
+      const el = document.createElement('section');
+      el.className='card';
+      el.innerHTML = `
+        <div>
+          <div class="rank">${i+1}</div>
+          <div class="topic">${esc(w)}</div>
+        </div>
+        <div class="actions">
+          <a class="btn" href="${yahooNewsSearch(w)}" target="_blank" rel="noopener noreferrer">Yahooニュース</a>
+          <a class="btn" href="${xSearch(w)}" target="_blank" rel="noopener noreferrer">X</a>
+          <a class="btn primary" href="${googleNewsSearch(w)}" target="_blank" rel="noopener noreferrer">まとめ(Google)</a>
+          <a class="btn" href="${bingNewsSearch(w)}" target="_blank" rel="noopener noreferrer">まとめ(Bing)</a>
+        </div>
+      `;
+      grid.appendChild(el);
+    });
   }
 
-  async function refresh(){
-    setLoading(true, '更新中');
-    btnRefresh.disabled = true;
-    try{
-      const r = await fetchTop10();
-      const now = new Date();
-      const label = r.updated ? String(r.updated) : now.toLocaleString();
-      render(r.topics, label);
-      lastUpdated.textContent = label;
-      statusText.textContent = '最新を表示中';
-      saveCache({ ts: Date.now(), topics: r.topics, updated: r.updated || '' });
-      toast('最新トレンドを取得しました');
-    }catch(e){
-      const cache = loadCache();
-      if(cache?.topics?.length){
-        const label = cache.updated ? String(cache.updated) : new Date(cache.ts).toLocaleString();
-        render(cache.topics, label);
-        lastUpdated.textContent = label;
-        statusText.textContent = 'キャッシュを表示中';
-        toast('最新取得に失敗→キャッシュを表示しました');
-      }else{
-        const label = new Date().toLocaleString();
-        render(FALLBACK_TOPICS, label);
-        lastUpdated.textContent = label;
-        statusText.textContent = '予備データを表示中';
-        toast('最新取得に失敗→予備データを表示しました');
-      }
-      console.warn(e);
-    }finally{
-      setLoading(false, '更新');
-      btnRefresh.disabled = false;
-    }
+  try{
+    const list = await fetchTop10();
+    render(list);
+    updated.textContent = new Date().toLocaleString();
+  }catch(e){
+    render(['取得失敗']);
   }
-
-  const savedProxy = loadProxy();
-  proxyInput.value = savedProxy;
-
-  btnSave.addEventListener('click', ()=>{
-    saveProxy(proxyInput.value.trim());
-    toast('プロキシURLを保存しました');
-  });
-  btnReset.addEventListener('click', ()=>{
-    proxyInput.value = '';
-    saveProxy('');
-    toast('既定に戻しました');
-  });
-  btnRefresh.addEventListener('click', refresh);
-
-  const initialLabel = '読み込み中…';
-  render(FALLBACK_TOPICS, initialLabel);
-  lastUpdated.textContent = initialLabel;
-  refresh();
 })();
 </script>
 </body>
