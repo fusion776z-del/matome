@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>今日の注目TOP10（日本）— Yahoo→まとめジャンプ</title>
+  <title>今日の注目TOP10（日本）— 自動更新（Yahoo + X）</title>
   <style>
     :root{
       --bg:#0b1220; --panel:#111a2e; --text:#e8eeff; --muted:#9fb0d0;
@@ -97,32 +97,44 @@
       z-index: 999;
       white-space:pre-wrap;
     }
+    .spin{
+      display:inline-block;
+      width:12px;height:12px;border-radius:999px;
+      border:2px solid rgba(255,255,255,.25);
+      border-top-color: rgba(110,168,255,.9);
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <div>
-        <h1>今日の注目TOP10（日本）— Yahoo→まとめジャンプ</h1>
+        <h1>今日の注目TOP10（日本）— 自動更新（Yahoo + X）</h1>
         <div class="sub">
-          「Yahoo→まとめへ」を押すと、<br/>
-          ① Yahoo!ニュース検索（新しいタブ）を開き、② 今のタブを“まとめサイト”へ移動します。[1](https://tweetan.dtn.jp/)
+          ページ更新で「Google Trends 日本の急上昇（RSS）」から最新トレンドを取得してTOP10を作ります。[1](https://trends.google.co.jp/trending/rss?geo=JP)<br/>
+          トピックは「Yahoo!ニュース検索」と「X検索」へワンタップで飛べます。[2](https://tweetan.dtn.jp/)[3](https://blog.jbs.co.jp/entry/2023/02/21/114429)
         </div>
       </div>
       <div class="badge">
-        参照元: trend-calendar（Google） / <span class="mono">2026-04-23 01:45</span>
+        <span id="statusIcon" style="display:none" class="spin"></span>
+        <span id="statusText">更新待ち</span>
+        <span>／</span>
+        <span class="mono" id="lastUpdated">—</span>
       </div>
     </header>
 
     <section class="panel">
       <div class="row">
         <div class="hint">
-          ・Yahoo!ニュース検索は <span class="mono">news.yahoo.co.jp/search?p=...</span> 形式で検索語を渡せます。[1](https://tweetan.dtn.jp/)<br/>
-          ・“まとめサイト”は例として <span class="mono">bing.com/news/search?q=...&format=rss</span> を使っています（ログイン不要）。<br/>
-          ・X検索は <span class="mono">x.com/search?q=...</span> をそのまま使います。[2](https://blog.jbs.co.jp/entry/2023/02/21/114429)
+          ・トレンド取得元（RSS）: <span class="mono">https://trends.google.co.jp/trending/rss?geo=JP</span> [1](https://trends.google.co.jp/trending/rss?geo=JP)<br/>
+          ・Yahoo!ニュース検索: <span class="mono">https://news.yahoo.co.jp/search?p=キーワード</span>（例示あり）[2](https://tweetan.dtn.jp/)<br/>
+          ・X検索: <span class="mono">https://x.com/search?q=...</span>（例示あり）[3](https://blog.jbs.co.jp/entry/2023/02/21/114429)
         </div>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <a class="btn small primary" href="https://jp.trend-calendar.com/" target="_blank" rel="noopener noreferrer">トレンドカレンダー ↗</a>
+          <button class="btn small primary" id="btnRefresh">今すぐ更新</button>
+          <a class="btn small" href="https://jp.trend-calendar.com/" target="_blank" rel="noopener noreferrer">トレンドカレンダー ↗</a>
           <a class="btn small" href="https://twittrend.jp/" target="_blank" rel="noopener noreferrer">Twittrend（Xトレンド）↗</a>
           <a class="btn small" href="https://trends.google.co.jp/trending" target="_blank" rel="noopener noreferrer">Googleトレンド 急上昇 ↗</a>
         </div>
@@ -135,23 +147,23 @@
 
 <script>
 (() => {
-  const SOURCE_UPDATED = "2026-04-23 01:45";
+  // 取得元（Google Trends RSS / Japan） [1](https://trends.google.co.jp/trending/rss?geo=JP)
+  const TRENDS_RSS = "https://trends.google.co.jp/trending/rss?geo=JP";
 
-  const TOPICS = [
-    { rank: 1, word: "サンリオ ボンボンドロップシール" },
-    { rank: 2, word: "失点" },
-    { rank: 3, word: "日ハム" },
-    { rank: 4, word: "阪神" },
-    { rank: 5, word: "ボートレースびわこ" },
-    { rank: 6, word: "池上彰" },
-    { rank: 7, word: "紀伊國屋書店" },
-    { rank: 8, word: "プロ野球 順位" },
-    { rank: 9, word: "ios 27" },
-    { rank:10, word: "八村塁" }
+  // 取得できないとき用の予備（初期表示）
+  const FALLBACK_TOPICS = [
+    "サンリオ ボンボンドロップシール","失点","日ハム","阪神","ボートレースびわこ",
+    "池上彰","紀伊國屋書店","プロ野球 順位","ios 27","八村塁"
   ];
+
+  const CACHE_KEY = "jp-trends-top10.cache.v1"; // { ts:number, topics:string[], feedDate?:string }
 
   const grid = document.getElementById("grid");
   const toastEl = document.getElementById("toast");
+  const statusIcon = document.getElementById("statusIcon");
+  const statusText = document.getElementById("statusText");
+  const lastUpdated = document.getElementById("lastUpdated");
+  const btnRefresh = document.getElementById("btnRefresh");
 
   const esc = (s)=>String(s)
     .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
@@ -164,78 +176,157 @@
     toastEl._t = setTimeout(()=> toastEl.style.display="none", 2600);
   }
 
-  // Yahoo!ニュース検索（p=）[1](https://tweetan.dtn.jp/)
+  function setLoading(on, msg){
+    statusIcon.style.display = on ? "inline-block" : "none";
+    statusText.textContent = msg || (on ? "更新中" : "更新");
+  }
+
+  function saveCache(obj){
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(obj)); } catch {}
+  }
+  function loadCache(){
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  }
+
+  // Yahoo!ニュース検索（p=）例示あり [2](https://tweetan.dtn.jp/)
   function yahooNewsSearch(q){
     return `https://news.yahoo.co.jp/search?p=${encodeURIComponent(q)}`;
   }
 
-  // まとめサイト（例：Bing News RSS）
-  function summarySite(q){
-    return `https://www.bing.com/news/search?q=${encodeURIComponent(q)}&format=rss`;
-  }
-
-  // X検索（q=）[2](https://blog.jbs.co.jp/entry/2023/02/21/114429)
+  // X 検索URL（q=）例示あり [3](https://blog.jbs.co.jp/entry/2023/02/21/114429)
   function xSearch(q){
     const query = encodeURIComponent(`${q} lang:ja`);
     return `https://x.com/search?q=${query}&f=live&src=typed_query`;
   }
 
-  // ★ 1ファイルで「Yahooを新タブ→このタブはまとめへ」
+  // “まとめサイト”例：Bing News のRSS表示（URL例あり）[4](https://trends.google.com/trends/)
+  function summarySite(q){
+    return `https://www.bing.com/news/search?q=${encodeURIComponent(q)}&format=rss`;
+  }
+
+  // 1ファイルで「Yahooを新タブ→このタブはまとめへ」
   function openYahooAndJumpSummary(topic){
     const y = yahooNewsSearch(topic);
     const s = summarySite(topic);
 
-    // 新しいタブでYahoo検索を開く（ポップアップブロックされる場合あり）
     const w = window.open(y, "_blank", "noopener,noreferrer");
-
-    // すぐにこのタブをまとめへ移動
     setTimeout(() => { location.href = s; }, 120);
 
     if(!w){
-      toast(
-        "ポップアップがブロックされた可能性があります。\n" +
-        "下のリンクから開いてください：\n" + y
-      );
+      toast("ポップアップがブロックされたかもしれません。\nYahoo検索: " + y);
     }
   }
 
-  function createCard(t){
-    const topic = t.word;
-    const card = document.createElement("section");
-    card.className = "card";
-    card.innerHTML = `
-      <div class="head">
-        <div class="left">
-          <div class="rank">${t.rank}</div>
-          <div style="min-width:0">
-            <p class="topic">${esc(topic)}</p>
-            <div class="meta">ランキング更新: <span class="mono">${esc(SOURCE_UPDATED)}</span></div>
+  function render(topics, updatedLabel){
+    grid.innerHTML = "";
+    (topics || []).slice(0, 10).forEach((word, idx) => {
+      const rank = idx + 1;
+      const card = document.createElement("section");
+      card.className = "card";
+      card.dataset.topic = word;
+
+      card.innerHTML = `
+        <div class="head">
+          <div class="left">
+            <div class="rank">${rank}</div>
+            <div style="min-width:0">
+              <p class="topic">${esc(word)}</p>
+              <div class="meta">更新: <span class="mono">${esc(updatedLabel || "—")}</span></div>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn small primary" data-act="jump">Yahoo→まとめへ ↗</button>
+            <a class="btn small" href="${xSearch(word)}" target="_blank" rel="noopener noreferrer">Xで検索 ↗</a>
           </div>
         </div>
-        <div class="actions">
-          <button class="btn small primary" data-act="jump">Yahoo→まとめへ ↗</button>
-          <a class="btn small" href="${xSearch(topic)}" target="_blank" rel="noopener noreferrer">Xで検索 ↗</a>
-        </div>
-      </div>
-      <div class="hint">
-        「Yahoo→まとめへ」＝ Yahoo!ニュース検索（新タブ）＋まとめサイト（このタブ）へ移動
-      </div>
-    `;
+      `;
 
-    card.addEventListener("click", (ev) => {
-      const btn = ev.target.closest("button");
-      if(!btn) return;
-      if(btn.dataset.act === "jump"){
-        openYahooAndJumpSummary(topic);
-      }
+      card.addEventListener("click", (ev) => {
+        const btn = ev.target.closest("button");
+        if(!btn) return;
+        if(btn.dataset.act === "jump"){
+          openYahooAndJumpSummary(word);
+        }
+      });
+
+      grid.appendChild(card);
     });
-
-    return card;
   }
 
-  TOPICS.forEach(t => grid.appendChild(createCard(t)));
+  async function fetchTrendsTop10(){
+    // RSS を取得して item/title を抜く
+    const res = await fetch(TRENDS_RSS, { cache: "no-store" });
+    if(!res.ok) throw new Error("rss_fetch_failed");
+    const text = await res.text();
+    const doc = new DOMParser().parseFromString(text, "text/xml");
+
+    // feed更新日時（あれば）
+    const feedDate =
+      doc.querySelector("channel > lastBuildDate")?.textContent?.trim() ||
+      doc.querySelector("channel > pubDate")?.textContent?.trim() ||
+      "";
+
+    const items = Array.from(doc.querySelectorAll("item > title"))
+      .map(n => (n.textContent || "").trim())
+      .filter(Boolean);
+
+    // 上位10件
+    const top10 = items.slice(0, 10);
+
+    if(top10.length < 3) throw new Error("rss_parse_failed");
+    return { topics: top10, feedDate };
+  }
+
+  async function refresh(){
+    setLoading(true, "更新中");
+    btnRefresh.disabled = true;
+
+    try{
+      const r = await fetchTrendsTop10();
+      const now = new Date();
+      const label = r.feedDate || now.toLocaleString();
+
+      render(r.topics, label);
+      lastUpdated.textContent = label;
+      statusText.textContent = "最新を表示中";
+
+      saveCache({ ts: Date.now(), topics: r.topics, feedDate: r.feedDate || "" });
+      toast("最新トレンドを取得しました");
+    } catch (e){
+      // 失敗時はキャッシュ→なければfallback
+      const cache = loadCache();
+      if(cache?.topics?.length){
+        const label = cache.feedDate || new Date(cache.ts).toLocaleString();
+        render(cache.topics, label);
+        lastUpdated.textContent = label;
+        statusText.textContent = "キャッシュを表示中";
+        toast("最新取得に失敗→キャッシュを表示しました");
+      } else {
+        const label = new Date().toLocaleString();
+        render(FALLBACK_TOPICS, label);
+        lastUpdated.textContent = label;
+        statusText.textContent = "予備データを表示中";
+        toast("最新取得に失敗→予備データを表示しました");
+      }
+    } finally {
+      setLoading(false, "更新");
+      btnRefresh.disabled = false;
+    }
+  }
+
+  // 初回：ページ表示（=リロード）で最新を取りに行く
+  btnRefresh.addEventListener("click", refresh);
+
+  // まずは画面を仮描画してから更新（体感を良くする）
+  const initialLabel = "読み込み中…";
+  render(FALLBACK_TOPICS, initialLabel);
+  lastUpdated.textContent = initialLabel;
+
+  refresh();
 })();
 </script>
 </body>
 </html>
-``
