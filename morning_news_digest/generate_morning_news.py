@@ -16,19 +16,24 @@ from pathlib import Path
 from urllib.error import HTTPError, URLError
 
 JST = timezone(timedelta(hours=9))
-
 BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = BASE_DIR / "output"
 FEEDS_PATH = BASE_DIR / "feeds.json"
 DB_PATH = BASE_DIR / "articles.db"
 HTML_PATH = OUTPUT_DIR / "morning_news.html"
 
+ELLIPSIS_SUFFIXES = ("…", "...", "⋯")
+SENTENCE_ENDINGS = ("。", "！", "？", ".", "!", "?")
+
 DEFAULT_CONFIG = {
     "page_title": "自分用・朝のニュースまとめ",
-    "max_articles": 20,
-    "top_pick_count": 3,
+    "max_articles": 30,
+    "top_pick_count": 5,
+    "max_topic_groups": 12,
+    "max_articles_per_topic": 5,
     "request_timeout_seconds": 15,
     "ai_summary_enabled": True,
+    "aggregate_summary_enabled": True,
     "ai_model": "gpt-4.1-mini",
     "keywords": ["AI", "生成AI", "Microsoft", "半導体", "北海道", "函館"],
     "exclude_keywords": ["芸能ゴシップ", "占い"],
@@ -43,6 +48,8 @@ DEFAULT_CONFIG = {
             "クラウド",
             "サイバー",
             "セキュリティ",
+            "データセンター",
+            "ロボット",
         ],
         "ビジネス": [
             "経済",
@@ -53,6 +60,10 @@ DEFAULT_CONFIG = {
             "為替",
             "金利",
             "日銀",
+            "物価",
+            "値上げ",
+            "賃上げ",
+            "景気",
         ],
         "北海道・函館": [
             "北海道",
@@ -61,6 +72,9 @@ DEFAULT_CONFIG = {
             "道南",
             "渡島",
             "檜山",
+            "知床",
+            "旭川",
+            "小樽",
         ],
         "国内": [
             "政府",
@@ -70,20 +84,63 @@ DEFAULT_CONFIG = {
             "省",
             "庁",
             "自治体",
+            "制度",
+            "法案",
+        ],
+        "国際": [
+            "米国",
+            "中国",
+            "韓国",
+            "ロシア",
+            "欧州",
+            "EU",
+            "中東",
+            "ウクライナ",
+            "外交",
         ],
     },
     "feeds": [
         {
             "name": "NHKニュース",
-            "url": "https://www.nhk.or.jp/rss/news/cat0.xml",
+            "url": "https://news.web.nhk/n-data/conf/na/rss/cat0.xml",
             "category": "国内",
             "trust_score": 15,
         }
     ],
 }
 
-ELLIPSIS_SUFFIXES = ("…", "...", "⋯")
-SENTENCE_ENDINGS = ("。", "！", "？", ".", "!", "?")
+STOPWORDS = {
+    "する",
+    "した",
+    "して",
+    "いる",
+    "ある",
+    "なる",
+    "から",
+    "まで",
+    "より",
+    "など",
+    "ため",
+    "こと",
+    "これ",
+    "それ",
+    "この",
+    "その",
+    "への",
+    "にも",
+    "では",
+    "として",
+    "について",
+    "ニュース",
+    "速報",
+    "最新",
+    "発表",
+    "明らか",
+    "見通し",
+    "可能性",
+    "確認",
+    "記事",
+}
 
 
 def ensure_config() -> dict:
@@ -131,20 +188,11 @@ def ends_with_ellipsis(text: str) -> bool:
 
 
 def normalize_ai_sentence(text: str) -> str:
-    """
-    AI出力用。
-    意味を勝手に補完せず、空白や引用符だけ整える。
-    """
     text = re.sub(r"\s+", " ", str(text or "").strip())
-    text = text.strip(" \"'「」")
-    return text
+    return text.strip(" \"'「」")
 
 
 def ai_sentence_is_complete(text: str) -> bool:
-    """
-    AI要約が未完っぽくないかを簡易チェックする。
-    AI要約は抜粋ではなく要約なので、三点リーダー終わりはNGにする。
-    """
     text = normalize_ai_sentence(text)
 
     if not text:
@@ -157,28 +205,14 @@ def ai_sentence_is_complete(text: str) -> bool:
 
 
 def trim_excerpt(text: str, max_length: int = 160) -> str:
-    """
-    簡易要約用。
-    RSS概要を「抜粋」として扱う。
-
-    方針:
-    - 元RSSが短ければそのまま使う
-    - 元RSSが「…」で終わっていればそのまま尊重する
-    - こちらで文字数カットした場合だけ「…」を付ける
-    - 「。」に強制変換しない
-    """
     text = re.sub(r"\s+", " ", text.strip())
 
     if len(text) <= max_length:
         return text
 
     cut = text[:max_length].rstrip()
-
-    # カット位置が読点や区切り記号なら、見た目だけ少し整える。
-    # 句点「。」は消さない。抜粋なので「。…」も許容する。
     cut = cut.rstrip("、,・:：;；")
 
-    # すでに三点リーダーで終わっているなら二重にしない。
     if ends_with_ellipsis(cut):
         return cut
 
@@ -216,14 +250,18 @@ def fetch_url(url: str, timeout: int) -> bytes:
         return res.read()
 
 
+def local_name(tag: str) -> str:
+    return tag.split("}")[-1]
+
+
 def find_child_text(item: ET.Element, names: list[str]) -> str:
     wanted = set(names)
 
     for child in list(item):
-        local_name = child.tag.split("}")[-1]
+        name = local_name(child.tag)
 
-        if local_name in wanted:
-            if local_name == "link" and child.attrib.get("href"):
+        if name in wanted:
+            if name == "link" and child.attrib.get("href"):
                 return child.attrib.get("href", "")
             return child.text or ""
 
@@ -251,28 +289,15 @@ def score_article(
     text = f"{title} {description}".lower()
 
     score = 30
-
-    score += sum(
-        15
-        for kw in config.get("keywords", [])
-        if kw.lower() in text
-    )
-
-    score -= sum(
-        40
-        for kw in config.get("exclude_keywords", [])
-        if kw.lower() in text
-    )
+    score += sum(15 for kw in config.get("keywords", []) if kw.lower() in text)
+    score -= sum(40 for kw in config.get("exclude_keywords", []) if kw.lower() in text)
 
     if category in {"AI・テック", "北海道・函館"}:
         score += 10
 
     score += int(feed.get("trust_score", 0))
 
-    age_hours = max(
-        0,
-        (datetime.now(JST) - published_dt).total_seconds() / 3600,
-    )
+    age_hours = max(0, (datetime.now(JST) - published_dt).total_seconds() / 3600)
 
     if age_hours <= 6:
         score += 20
@@ -284,20 +309,7 @@ def score_article(
     return max(0, min(100, score))
 
 
-def make_simple_summary(
-    title: str,
-    description: str,
-    category: str,
-) -> tuple[str, str]:
-    """
-    簡易要約は「RSS概要の抜粋」として扱う。
-
-    方針:
-    - 元RSSが「…」で終わっていたら残す
-    - こちらで切った場合だけ「…」を付ける
-    - 「。」に強制変換しない
-    - 抜粋として扱う
-    """
+def make_simple_summary(title: str, description: str, category: str) -> tuple[str, str]:
     desc = clean_description(description)
 
     if desc:
@@ -310,6 +322,7 @@ def make_simple_summary(
         "ビジネス": "市場や企業活動の変化として、仕事や生活コストに関係する可能性があります。",
         "北海道・函館": "地域の生活・移動・イベント・行政情報として確認する価値があります。",
         "国内": "国内情勢や制度変更に関係する可能性があります。",
+        "国際": "海外情勢や市場・安全保障への波及を確認する価値があります。",
     }
 
     why = why_map.get(
@@ -318,167 +331,6 @@ def make_simple_summary(
     )
 
     return summary, why
-
-
-def extract_json_object(text: str) -> dict:
-    """
-    AI出力からJSONオブジェクト部分だけを取り出す。
-    念のため ```json ... ``` 形式にも対応する。
-    """
-    raw = text.strip()
-
-    raw = re.sub(r"^```(?:json)?", "", raw).strip()
-    raw = re.sub(r"```$", "", raw).strip()
-
-    start = raw.find("{")
-    end = raw.rfind("}")
-
-    if start == -1 or end == -1 or end <= start:
-        raise ValueError("JSON object not found in AI response")
-
-    return json.loads(raw[start : end + 1])
-
-
-def build_ai_prompt(
-    title: str,
-    description: str,
-    category: str,
-    retry: bool = False,
-) -> str:
-    retry_note = ""
-
-    if retry:
-        retry_note = """
-前回の出力が未完の文、または三点リーダー終わりでした。
-今回は必ず完結した文に直してください。
-"""
-
-    return f"""
-以下のニュース記事を日本語で要約してください。
-必ずJSONのみで返してください。前後に説明文やMarkdownは付けないでください。
-
-出力形式:
-{{"summary":"何が起きたかを1〜2文で", "why":"なぜ重要かを1文で"}}
-
-条件:
-- 事実ベースで書く
-- 推測しすぎない
-- 読者は日本在住の個人ユーザー
-- summary と why はそれぞれ180文字以内
-- 元RSSの概要が「…」で終わっていても、summary と why は完結した要約文にする
-- 不明な続きを勝手に補完しない
-- 不明な点が重要なら「詳細は記事本文で確認が必要です。」と書く
-- summary と why の文末を「…」「...」「⋯」で終えない
-- summary と why は自然な句点「。」「です。」「ます。」などで終える
-{retry_note}
-
-記事タイトル:
-{title}
-
-カテゴリ:
-{category}
-
-記事本文または概要:
-{description}
-""".strip()
-
-
-def call_ai_summary_once(
-    client,
-    model: str,
-    title: str,
-    description: str,
-    category: str,
-    retry: bool = False,
-) -> tuple[str, str]:
-    prompt = build_ai_prompt(
-        title=title,
-        description=description,
-        category=category,
-        retry=retry,
-    )
-
-    response = client.responses.create(
-        model=model,
-        input=prompt,
-    )
-
-    data = extract_json_object(response.output_text)
-
-    summary = normalize_ai_sentence(data.get("summary", ""))
-    why = normalize_ai_sentence(data.get("why", ""))
-
-    return summary, why
-
-
-def ai_summary(
-    title: str,
-    description: str,
-    category: str,
-    config: dict,
-) -> tuple[str, str]:
-    """
-    AI要約は「完結した要約」として扱う。
-
-    方針:
-    - 「…」で終わらせない
-    - 不明な続きを勝手に補完しない
-    - 完結した要約文にする
-    - 必要なら「詳細は記事本文で確認が必要です。」と書かせる
-    """
-    if not config.get("ai_summary_enabled", True):
-        return make_simple_summary(title, description, category)
-
-    api_key = os.environ.get("OPENAI_API_KEY")
-
-    if not api_key:
-        return make_simple_summary(title, description, category)
-
-    try:
-        from openai import OpenAI
-
-        client = OpenAI(api_key=api_key)
-
-        model = os.environ.get("OPENAI_MODEL") or config.get(
-            "ai_model",
-            "gpt-4.1-mini",
-        )
-
-        cleaned_description = clean_description(description)
-
-        # 1回目
-        summary, why = call_ai_summary_once(
-            client=client,
-            model=model,
-            title=title,
-            description=cleaned_description,
-            category=category,
-            retry=False,
-        )
-
-        # AIが「…」終わりや未完の文を返した場合だけ、再生成を1回試す。
-        if not ai_sentence_is_complete(summary) or not ai_sentence_is_complete(why):
-            summary, why = call_ai_summary_once(
-                client=client,
-                model=model,
-                title=title,
-                description=cleaned_description,
-                category=category,
-                retry=True,
-            )
-
-        if ai_sentence_is_complete(summary) and ai_sentence_is_complete(why):
-            return summary, why
-
-        print(
-            f"[warn] AI要約が完結文にならなかったため簡易要約に戻します: {title}",
-            file=sys.stderr,
-        )
-        return make_simple_summary(title, description, category)
-
-    except Exception as e:
-        print(f"[warn] AI要約に失敗しました: {title} / {e}", file=sys.stderr)
-        return make_simple_summary(title, description, category)
 
 
 def parse_feed(xml_bytes: bytes, feed: dict, config: dict) -> list[dict]:
@@ -490,7 +342,7 @@ def parse_feed(xml_bytes: bytes, feed: dict, config: dict) -> list[dict]:
         items = [
             elem
             for elem in root.iter()
-            if elem.tag.split("}")[-1] == "entry"
+            if local_name(elem.tag) == "entry"
         ]
 
     articles = []
@@ -534,7 +386,6 @@ def parse_feed(xml_bytes: bytes, feed: dict, config: dict) -> list[dict]:
             config,
         )
 
-        # まず簡易要約を入れておき、後でAI要約に成功した場合だけ上書きする。
         summary, why = make_simple_summary(title, description, category)
 
         articles.append(
@@ -567,24 +418,279 @@ def dedupe_articles(articles: list[dict]) -> list[dict]:
     return list(by_key.values())
 
 
-def enrich_articles_with_ai(articles: list[dict], config: dict) -> list[dict]:
-    max_articles = int(config.get("max_articles", 20))
-    target_articles = articles[:max_articles]
+def tokenize_for_grouping(text: str) -> set[str]:
+    text = normalize_text(text).lower()
+    words = re.findall(r"[a-zA-Z0-9]+|[一-龥ぁ-んァ-ヶー]{2,}", text)
 
-    for index, article in enumerate(target_articles, start=1):
-        summary, why = ai_summary(
-            article["title"],
-            article.get("description", ""),
-            article["category"],
-            config,
+    tokens = set()
+
+    for word in words:
+        if word in STOPWORDS:
+            continue
+
+        if len(word) < 2:
+            continue
+
+        tokens.add(word)
+
+    return tokens
+
+
+def article_tokens(article: dict) -> set[str]:
+    return tokenize_for_grouping(
+        f"{article.get('title', '')} {article.get('description', '')}"
+    )
+
+
+def token_similarity(a: set[str], b: set[str]) -> float:
+    if not a or not b:
+        return 0.0
+
+    return len(a & b) / max(1, min(len(a), len(b)))
+
+
+def same_topic(article: dict, group: dict, threshold: float = 0.34) -> bool:
+    article_title = article.get("title", "")
+    article_tokens_set = article_tokens(article)
+    representative = group["articles"][0]
+
+    if article.get("url") == representative.get("url"):
+        return True
+
+    if article.get("category") == representative.get("category"):
+        threshold = 0.30
+
+    for existing in group["articles"]:
+        sim = token_similarity(article_tokens_set, article_tokens(existing))
+
+        if sim >= threshold:
+            return True
+
+    title_tokens = tokenize_for_grouping(article_title)
+    group_title_tokens = set()
+
+    for existing in group["articles"]:
+        group_title_tokens |= tokenize_for_grouping(existing.get("title", ""))
+
+    if len(title_tokens & group_title_tokens) >= 2:
+        return True
+
+    return False
+
+
+def group_similar_articles(articles: list[dict], config: dict) -> list[dict]:
+    max_articles = int(config.get("max_articles", 30))
+
+    sorted_articles = sorted(
+        articles,
+        key=lambda x: x["score"],
+        reverse=True,
+    )[:max_articles]
+
+    groups: list[dict] = []
+
+    for article in sorted_articles:
+        placed = False
+
+        for group in groups:
+            if same_topic(article, group):
+                group["articles"].append(article)
+                group["score"] = max(group["score"], article["score"]) + min(
+                    10,
+                    len(group["articles"]) - 1,
+                )
+                placed = True
+                break
+
+        if not placed:
+            groups.append(
+                {
+                    "articles": [article],
+                    "score": article["score"],
+                }
+            )
+
+    for group in groups:
+        group["articles"] = sorted(
+            group["articles"],
+            key=lambda x: x["score"],
+            reverse=True,
+        )
+        group["sources"] = sorted({a["source"] for a in group["articles"]})
+        group["category"] = group["articles"][0].get("category", "未分類")
+
+    groups = sorted(
+        groups,
+        key=lambda g: (len(g["sources"]), g["score"]),
+        reverse=True,
+    )
+
+    return groups[: int(config.get("max_topic_groups", 12))]
+
+
+def extract_json_object(text: str) -> dict:
+    raw = text.strip()
+    raw = re.sub(r"^```(?:json)?", "", raw).strip()
+    raw = re.sub(r"```$", "", raw).strip()
+
+    start = raw.find("{")
+    end = raw.rfind("}")
+
+    if start == -1 or end == -1 or end <= start:
+        raise ValueError("JSON object not found in AI response")
+
+    return json.loads(raw[start : end + 1])
+
+
+def build_aggregate_prompt(group: dict, retry: bool = False) -> str:
+    articles = group["articles"]
+    article_lines = []
+
+    for index, article in enumerate(articles, start=1):
+        article_lines.append(
+            f"""
+記事{index}:
+出典: {article['source']}
+タイトル: {article['title']}
+カテゴリ: {article['category']}
+概要: {article.get('description') or article.get('summary')}
+URL: {article['url']}
+""".strip()
         )
 
-        article["summary"] = summary
-        article["why"] = why
+    retry_note = ""
 
-        print(f"[ai] {index}/{len(target_articles)}: {article['title'][:50]}")
+    if retry:
+        retry_note = """
+前回の出力が未完の文、または三点リーダー終わりでした。必ず完結した文に直してください。
+"""
 
-    return articles
+    return f"""
+以下は同じ、または近い話題として収集された複数の記事です。
+複数ソースを比較し、共通して確認できる事実を優先して日本語で総合要約してください。
+必ずJSONのみで返してください。Markdownや説明文は付けないでください。
+
+出力形式:
+{{
+  "headline": "総合見出しを1文で",
+  "summary": "何が起きたかを1〜2文で",
+  "why": "なぜ重要かを1文で",
+  "source_note": "出典の扱いを短く。例: 複数ソースで確認、または単独ソースの記事"
+}}
+
+条件:
+- 事実ベースで書く
+- 不明な続きを勝手に補完しない
+- 1つのソースにしかない情報は断定しすぎない
+- 必要なら「詳細は記事本文で確認が必要です。」と書く
+- 各項目は180文字以内
+- 文末を「…」「...」「⋯」で終えない
+- headline、summary、why、source_note は完結した文にする{retry_note}
+
+記事一覧:
+{chr(10).join(article_lines)}
+""".strip()
+
+
+def call_ai_aggregate_once(client, model: str, group: dict, retry: bool = False) -> dict:
+    prompt = build_aggregate_prompt(group, retry=retry)
+
+    response = client.responses.create(
+        model=model,
+        input=prompt,
+    )
+
+    data = extract_json_object(response.output_text)
+
+    return {
+        "headline": normalize_ai_sentence(data.get("headline", "")),
+        "summary": normalize_ai_sentence(data.get("summary", "")),
+        "why": normalize_ai_sentence(data.get("why", "")),
+        "source_note": normalize_ai_sentence(data.get("source_note", "")),
+    }
+
+
+def aggregate_fallback(group: dict) -> dict:
+    articles = group["articles"]
+    main = articles[0]
+    sources = sorted({a["source"] for a in articles})
+
+    headline = main["title"]
+    summary = main.get("summary") or trim_excerpt(main.get("description", ""), 160)
+    why = main.get("why") or "生活や仕事への影響を確認する価値があります。"
+
+    if len(sources) >= 2:
+        source_note = "複数ソースの記事をもとにした抜粋です。"
+    else:
+        source_note = "単独ソースの記事をもとにした抜粋です。"
+
+    return {
+        "headline": headline,
+        "summary": summary,
+        "why": why,
+        "source_note": source_note,
+    }
+
+
+def aggregate_summary(group: dict, config: dict) -> dict:
+    if not config.get("aggregate_summary_enabled", True):
+        return aggregate_fallback(group)
+
+    api_key = os.environ.get("OPENAI_API_KEY")
+
+    if not api_key:
+        return aggregate_fallback(group)
+
+    try:
+        from openai import OpenAI
+
+        client = OpenAI(api_key=api_key)
+        model = os.environ.get("OPENAI_MODEL") or config.get(
+            "ai_model",
+            "gpt-4.1-mini",
+        )
+
+        result = call_ai_aggregate_once(
+            client=client,
+            model=model,
+            group=group,
+            retry=False,
+        )
+
+        required = ["headline", "summary", "why", "source_note"]
+
+        if not all(ai_sentence_is_complete(result.get(k, "")) for k in required):
+            result = call_ai_aggregate_once(
+                client=client,
+                model=model,
+                group=group,
+                retry=True,
+            )
+
+        if all(ai_sentence_is_complete(result.get(k, "")) for k in required):
+            return result
+
+        print(
+            "[warn] 総合AI要約が完結文にならなかったためフォールバックします",
+            file=sys.stderr,
+        )
+        return aggregate_fallback(group)
+
+    except Exception as e:
+        print(f"[warn] 総合AI要約に失敗しました: {e}", file=sys.stderr)
+        return aggregate_fallback(group)
+
+
+def enrich_groups_with_ai(groups: list[dict], config: dict) -> list[dict]:
+    for index, group in enumerate(groups, start=1):
+        group["aggregate"] = aggregate_summary(group, config)
+
+        print(
+            f"[aggregate-ai] {index}/{len(groups)}: "
+            f"{group['aggregate']['headline'][:60]}"
+        )
+
+    return groups
 
 
 def save_articles(articles: list[dict]) -> None:
@@ -641,22 +747,51 @@ def score_class(score: int) -> str:
     return "score low"
 
 
-def render_article_card(article: dict) -> str:
+def render_related_links(articles: list[dict]) -> str:
+    links = []
+
+    for article in articles:
+        links.append(
+            f"""
+            <li>
+              <a href="{escape(article['url'])}" target="_blank" rel="noopener noreferrer">
+                {escape(article['source'])}: {escape(article['title'])}
+              </a>
+            </li>
+            """
+        )
+
+    return '<ul class="related">' + "\n".join(links) + "</ul>"
+
+
+def render_topic_card(group: dict) -> str:
+    aggregate = group["aggregate"]
+    articles = group["articles"]
+    sources = " / ".join(group.get("sources", []))
+    max_score = max(a["score"] for a in articles)
+    related = render_related_links(articles)
+    badge = "複数ソース" if len(group.get("sources", [])) >= 2 else "単独ソース"
+
     return f"""
     <article class="news">
-      <div class="title">
-        <a href="{escape(article['url'])}" target="_blank" rel="noopener noreferrer">
-          {escape(article['title'])}
-        </a>
+      <div class="topic-meta">
+        <span class="badge">{escape(badge)}</span>
+        <span class="source-inline">{escape(sources)}</span>
       </div>
-      <p><strong>何が起きたか:</strong> {escape(article['summary'])}</p>
-      <p><strong>なぜ重要か:</strong> {escape(article['why'])}</p>
+
+      <div class="title">{escape(aggregate['headline'])}</div>
+
+      <p><strong>何が起きたか:</strong> {escape(aggregate['summary'])}</p>
+      <p><strong>なぜ重要か:</strong> {escape(aggregate['why'])}</p>
+      <p><strong>出典メモ:</strong> {escape(aggregate['source_note'])}</p>
+
       <div class="source">
-        出典: {escape(article['source'])} /
-        カテゴリ: {escape(article['category'])} /
-        重要度: <span class="{score_class(article['score'])}">{article['score']}</span> /
-        公開: {escape(article['published_at'])}
+        カテゴリ: {escape(group.get('category', '未分類'))} /
+        重要度: <span class="{score_class(max_score)}">{max_score}</span> /
+        参照記事: {len(articles)}件
       </div>
+
+      {related}
     </article>
     """
 
@@ -742,25 +877,17 @@ def css() -> str:
 
     .news {
       border-left: 4px solid var(--accent);
-      padding: 12px 14px;
+      padding: 14px 16px;
       background: #fffdf7;
       border-radius: 12px;
       border: 1px solid var(--line);
-      margin: 10px 0;
+      margin: 12px 0;
     }
 
     .title {
       font-weight: 800;
       font-size: 18px;
-    }
-
-    .title a {
-      color: var(--ink);
-      text-decoration: none;
-    }
-
-    .title a:hover {
-      text-decoration: underline;
+      margin: 4px 0 10px;
     }
 
     .source {
@@ -782,6 +909,43 @@ def css() -> str:
       color: var(--red);
     }
 
+    .topic-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .badge {
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #eef3ff;
+      color: #315dcc;
+      border: 1px solid #d9e4ff;
+      font-weight: 700;
+    }
+
+    .source-inline {
+      color: var(--muted);
+    }
+
+    .related {
+      margin: 10px 0 0 0;
+      padding-left: 20px;
+      font-size: 13px;
+    }
+
+    .related a {
+      color: #315dcc;
+      text-decoration: none;
+    }
+
+    .related a:hover {
+      text-decoration: underline;
+    }
+
     @media (max-width: 900px) {
       .app {
         grid-template-columns: 1fr;
@@ -797,52 +961,38 @@ def css() -> str:
     """
 
 
-def render_html(articles: list[dict], config: dict) -> str:
+def render_html(groups: list[dict], articles: list[dict], config: dict) -> str:
     now_label = datetime.now(JST).strftime("%Y年%m月%d日 %H:%M")
+    title = escape(config.get("page_title", "自分用・朝のニュースまとめ"))
+    top_pick_count = int(config.get("top_pick_count", 5))
+    top_groups = groups[:top_pick_count]
 
-    max_articles = int(config.get("max_articles", 20))
-    top_pick_count = int(config.get("top_pick_count", 3))
-
-    articles = sorted(
-        articles,
-        key=lambda x: x["score"],
-        reverse=True,
-    )[:max_articles]
-
-    top_cards = "\n".join(
-        render_article_card(a) for a in articles[:top_pick_count]
-    ) or "<p>記事がありません。</p>"
+    top_cards = "\n".join(render_topic_card(g) for g in top_groups) or "<p>記事がありません。</p>"
 
     preferred_categories = [
         "国内",
         "AI・テック",
         "ビジネス",
         "北海道・函館",
+        "国際",
         "未分類",
     ]
 
-    all_categories = preferred_categories + sorted(
-        {
-            a["category"]
-            for a in articles
-            if a["category"] not in set(preferred_categories)
-        }
-    )
-
     sections = []
 
-    for category in all_categories:
-        items = [a for a in articles if a["category"] == category]
+    for category in preferred_categories:
+        category_groups = [g for g in groups if g.get("category") == category]
 
-        if not items:
+        if not category_groups:
             continue
 
-        cards = "\n".join(render_article_card(a) for a in items)
+        cards = "\n".join(render_topic_card(g) for g in category_groups)
         sections.append(
             f'<section class="card"><h2>{escape(category)}</h2>{cards}</section>'
         )
 
-    title = escape(config.get("page_title", "自分用・朝のニュースまとめ"))
+    source_names = sorted({a["source"] for a in articles})
+    source_label = " / ".join(source_names) if source_names else "なし"
 
     return f"""<!doctype html>
 <html lang="ja">
@@ -858,6 +1008,7 @@ def render_html(articles: list[dict], config: dict) -> str:
       <h2>🗞️ Morning Digest</h2>
       <a class="nav-item" href="#overview">🏠 概要</a>
       <a class="nav-item" href="#digest">☕ 今日の朝刊</a>
+      <a class="nav-item" href="#categories">🗂️ カテゴリ別</a>
     </aside>
 
     <main>
@@ -865,9 +1016,11 @@ def render_html(articles: list[dict], config: dict) -> str:
         <div class="hero">
           <div style="font-size:46px">☕</div>
           <h1>{title}</h1>
-          <p>RSSから記事を取得し、AI要約付きの朝のニュースまとめを表示します。</p>
+          <p>複数RSSから記事を取得し、近い話題を束ねてAIで総合要約しました。</p>
           <span class="pill">📅 生成日時: {escape(now_label)}</span>
-          <span class="pill">📰 表示記事: {len(articles)}件</span>
+          <span class="pill">📰 取得記事: {len(articles)}件</span>
+          <span class="pill">🧩 話題グループ: {len(groups)}件</span>
+          <span class="pill">🗞️ 出典: {escape(source_label)}</span>
         </div>
 
         <h2 id="digest">今日押さえるべき{top_pick_count}つ</h2>
@@ -875,7 +1028,7 @@ def render_html(articles: list[dict], config: dict) -> str:
           {top_cards}
         </div>
 
-        <h2>カテゴリ別ニュース</h2>
+        <h2 id="categories">カテゴリ別ニュース</h2>
         {''.join(sections)}
       </section>
     </main>
@@ -899,6 +1052,7 @@ def main() -> None:
 
         try:
             print(f"[fetch] {name}: {url}")
+
             articles = parse_feed(
                 fetch_url(
                     url,
@@ -926,18 +1080,22 @@ def main() -> None:
         reverse=True,
     )
 
-    deduped = enrich_articles_with_ai(deduped, config)
+    groups = group_similar_articles(deduped, config)
+    groups = enrich_groups_with_ai(groups, config)
 
     save_articles(deduped)
 
     OUTPUT_DIR.mkdir(exist_ok=True)
 
     HTML_PATH.write_text(
-        render_html(deduped, config),
+        render_html(groups, deduped, config),
         encoding="utf-8",
     )
 
-    print(f"\n完了: {len(all_articles)}件取得 / {len(deduped)}件をHTMLに出力")
+    print(
+        f"\n完了: {len(all_articles)}件取得 / "
+        f"{len(deduped)}件保存 / {len(groups)}グループをHTMLに出力"
+    )
     print(f"HTML: {HTML_PATH}")
     print(f"DB:   {DB_PATH}")
 
