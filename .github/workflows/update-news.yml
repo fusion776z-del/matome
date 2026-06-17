@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
 
   schedule:
-    # 毎日 22:00 UTC = 日本時間 07:00
-    - cron: "0 22 * * *"
+    # 1時間に1回
+    - cron: "0 * * * *"
 
   push:
     branches:
