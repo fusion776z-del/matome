@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 from __future__ import annotations
 
 import json
@@ -83,6 +82,9 @@ DEFAULT_CONFIG = {
     ],
 }
 
+ELLIPSIS_SUFFIXES = ("…", "...", "⋯")
+SENTENCE_ENDINGS = ("。", "！", "？", ".", "!", "?")
+
 
 def ensure_config() -> dict:
     if not FEEDS_PATH.exists():
@@ -110,7 +112,6 @@ def normalize_text(text: str | None) -> str:
 def clean_description(text: str | None) -> str:
     text = normalize_text(text)
 
-    # RSSにありがちな不要な末尾表現を軽く除去
     remove_patterns = [
         r"続きを読む。?$",
         r"詳しくはこちら。?$",
@@ -125,56 +126,63 @@ def clean_description(text: str | None) -> str:
     return text
 
 
-def ensure_period(text: str) -> str:
-    text = re.sub(r"\s+", " ", text.strip())
-    text = text.rstrip("、,・:：;；…")
+def ends_with_ellipsis(text: str) -> bool:
+    return text.rstrip().endswith(ELLIPSIS_SUFFIXES)
+
+
+def normalize_ai_sentence(text: str) -> str:
+    """
+    AI出力用。
+    意味を勝手に補完せず、空白や引用符だけ整える。
+    """
+    text = re.sub(r"\s+", " ", str(text or "").strip())
+    text = text.strip(" \"'「」")
+    return text
+
+
+def ai_sentence_is_complete(text: str) -> bool:
+    """
+    AI要約が未完っぽくないかを簡易チェックする。
+    AI要約は抜粋ではなく要約なので、三点リーダー終わりはNGにする。
+    """
+    text = normalize_ai_sentence(text)
 
     if not text:
-        return ""
+        return False
 
-    if text.endswith(("。", "！", "？", ".", "!", "?")):
-        return text
+    if ends_with_ellipsis(text):
+        return False
 
-    return text + "。"
+    return text.endswith(SENTENCE_ENDINGS)
 
 
-def trim_to_sentence(text: str, max_length: int = 160) -> str:
+def trim_excerpt(text: str, max_length: int = 160) -> str:
+    """
+    簡易要約用。
+    RSS概要を「抜粋」として扱う。
+
+    方針:
+    - 元RSSが短ければそのまま使う
+    - 元RSSが「…」で終わっていればそのまま尊重する
+    - こちらで文字数カットした場合だけ「…」を付ける
+    - 「。」に強制変換しない
+    """
     text = re.sub(r"\s+", " ", text.strip())
-
-    if not text:
-        return ""
 
     if len(text) <= max_length:
-        return ensure_period(text)
+        return text
 
-    cut = text[:max_length]
+    cut = text[:max_length].rstrip()
 
-    # できるだけ自然な文末で切る
-    last_sentence_end = max(
-        cut.rfind("。"),
-        cut.rfind("！"),
-        cut.rfind("？"),
-        cut.rfind("."),
-        cut.rfind("!"),
-        cut.rfind("?"),
-    )
+    # カット位置が読点や区切り記号なら、見た目だけ少し整える。
+    # 句点「。」は消さない。抜粋なので「。…」も許容する。
+    cut = cut.rstrip("、,・:：;；")
 
-    # あまり短すぎる位置では切らない
-    if last_sentence_end >= 40:
-        return ensure_period(cut[: last_sentence_end + 1])
+    # すでに三点リーダーで終わっているなら二重にしない。
+    if ends_with_ellipsis(cut):
+        return cut
 
-    # 文末記号がない場合は、読点やスペースで切る
-    last_soft_break = max(
-        cut.rfind("、"),
-        cut.rfind(","),
-        cut.rfind(" "),
-    )
-
-    if last_soft_break >= 40:
-        return ensure_period(cut[:last_soft_break])
-
-    # どうしても自然な切れ目がない場合も「…」は付けない
-    return ensure_period(cut)
+    return cut + "…"
 
 
 def parse_date(value: str) -> datetime:
@@ -203,6 +211,7 @@ def fetch_url(url: str, timeout: int) -> bytes:
             "Accept": "application/rss+xml, application/xml, text/xml, */*",
         },
     )
+
     with urllib.request.urlopen(req, timeout=timeout) as res:
         return res.read()
 
@@ -212,6 +221,7 @@ def find_child_text(item: ET.Element, names: list[str]) -> str:
 
     for child in list(item):
         local_name = child.tag.split("}")[-1]
+
         if local_name in wanted:
             if local_name == "link" and child.attrib.get("href"):
                 return child.attrib.get("href", "")
@@ -241,15 +251,28 @@ def score_article(
     text = f"{title} {description}".lower()
 
     score = 30
-    score += sum(15 for kw in config.get("keywords", []) if kw.lower() in text)
-    score -= sum(40 for kw in config.get("exclude_keywords", []) if kw.lower() in text)
+
+    score += sum(
+        15
+        for kw in config.get("keywords", [])
+        if kw.lower() in text
+    )
+
+    score -= sum(
+        40
+        for kw in config.get("exclude_keywords", [])
+        if kw.lower() in text
+    )
 
     if category in {"AI・テック", "北海道・函館"}:
         score += 10
 
     score += int(feed.get("trust_score", 0))
 
-    age_hours = max(0, (datetime.now(JST) - published_dt).total_seconds() / 3600)
+    age_hours = max(
+        0,
+        (datetime.now(JST) - published_dt).total_seconds() / 3600,
+    )
 
     if age_hours <= 6:
         score += 20
@@ -266,10 +289,19 @@ def make_simple_summary(
     description: str,
     category: str,
 ) -> tuple[str, str]:
+    """
+    簡易要約は「RSS概要の抜粋」として扱う。
+
+    方針:
+    - 元RSSが「…」で終わっていたら残す
+    - こちらで切った場合だけ「…」を付ける
+    - 「。」に強制変換しない
+    - 抜粋として扱う
+    """
     desc = clean_description(description)
 
     if desc:
-        summary = trim_to_sentence(desc, max_length=160)
+        summary = trim_excerpt(desc, max_length=160)
     else:
         summary = f"『{title}』に関するニュースです。"
 
@@ -288,31 +320,40 @@ def make_simple_summary(
     return summary, why
 
 
-def ai_summary(
+def extract_json_object(text: str) -> dict:
+    """
+    AI出力からJSONオブジェクト部分だけを取り出す。
+    念のため ```json ... ``` 形式にも対応する。
+    """
+    raw = text.strip()
+
+    raw = re.sub(r"^```(?:json)?", "", raw).strip()
+    raw = re.sub(r"```$", "", raw).strip()
+
+    start = raw.find("{")
+    end = raw.rfind("}")
+
+    if start == -1 or end == -1 or end <= start:
+        raise ValueError("JSON object not found in AI response")
+
+    return json.loads(raw[start : end + 1])
+
+
+def build_ai_prompt(
     title: str,
     description: str,
     category: str,
-    config: dict,
-) -> tuple[str, str]:
-    if not config.get("ai_summary_enabled", True):
-        return make_simple_summary(title, description, category)
+    retry: bool = False,
+) -> str:
+    retry_note = ""
 
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        return make_simple_summary(title, description, category)
+    if retry:
+        retry_note = """
+前回の出力が未完の文、または三点リーダー終わりでした。
+今回は必ず完結した文に直してください。
+"""
 
-    try:
-        from openai import OpenAI
-
-        client = OpenAI(api_key=api_key)
-        model = os.environ.get("OPENAI_MODEL") or config.get(
-            "ai_model",
-            "gpt-4.1-mini",
-        )
-
-        cleaned_description = clean_description(description)
-
-        prompt = f"""
+    return f"""
 以下のニュース記事を日本語で要約してください。
 必ずJSONのみで返してください。前後に説明文やMarkdownは付けないでください。
 
@@ -324,9 +365,12 @@ def ai_summary(
 - 推測しすぎない
 - 読者は日本在住の個人ユーザー
 - summary と why はそれぞれ180文字以内
-- 文末を「…」で終えない
-- 必ず自然な句点「。」または「です。」「ます。」で終える
-- 途中で切れたような文章にしない
+- 元RSSの概要が「…」で終わっていても、summary と why は完結した要約文にする
+- 不明な続きを勝手に補完しない
+- 不明な点が重要なら「詳細は記事本文で確認が必要です。」と書く
+- summary と why の文末を「…」「...」「⋯」で終えない
+- summary と why は自然な句点「。」「です。」「ます。」などで終える
+{retry_note}
 
 記事タイトル:
 {title}
@@ -335,26 +379,101 @@ def ai_summary(
 {category}
 
 記事本文または概要:
-{cleaned_description}
+{description}
 """.strip()
 
-        response = client.responses.create(
-            model=model,
-            input=prompt,
+
+def call_ai_summary_once(
+    client,
+    model: str,
+    title: str,
+    description: str,
+    category: str,
+    retry: bool = False,
+) -> tuple[str, str]:
+    prompt = build_ai_prompt(
+        title=title,
+        description=description,
+        category=category,
+        retry=retry,
+    )
+
+    response = client.responses.create(
+        model=model,
+        input=prompt,
+    )
+
+    data = extract_json_object(response.output_text)
+
+    summary = normalize_ai_sentence(data.get("summary", ""))
+    why = normalize_ai_sentence(data.get("why", ""))
+
+    return summary, why
+
+
+def ai_summary(
+    title: str,
+    description: str,
+    category: str,
+    config: dict,
+) -> tuple[str, str]:
+    """
+    AI要約は「完結した要約」として扱う。
+
+    方針:
+    - 「…」で終わらせない
+    - 不明な続きを勝手に補完しない
+    - 完結した要約文にする
+    - 必要なら「詳細は記事本文で確認が必要です。」と書かせる
+    """
+    if not config.get("ai_summary_enabled", True):
+        return make_simple_summary(title, description, category)
+
+    api_key = os.environ.get("OPENAI_API_KEY")
+
+    if not api_key:
+        return make_simple_summary(title, description, category)
+
+    try:
+        from openai import OpenAI
+
+        client = OpenAI(api_key=api_key)
+
+        model = os.environ.get("OPENAI_MODEL") or config.get(
+            "ai_model",
+            "gpt-4.1-mini",
         )
 
-        raw = response.output_text.strip()
-        data = json.loads(raw)
+        cleaned_description = clean_description(description)
 
-        summary = str(data.get("summary", "")).strip()
-        why = str(data.get("why", "")).strip()
+        # 1回目
+        summary, why = call_ai_summary_once(
+            client=client,
+            model=model,
+            title=title,
+            description=cleaned_description,
+            category=category,
+            retry=False,
+        )
 
-        summary = ensure_period(summary)
-        why = ensure_period(why)
+        # AIが「…」終わりや未完の文を返した場合だけ、再生成を1回試す。
+        if not ai_sentence_is_complete(summary) or not ai_sentence_is_complete(why):
+            summary, why = call_ai_summary_once(
+                client=client,
+                model=model,
+                title=title,
+                description=cleaned_description,
+                category=category,
+                retry=True,
+            )
 
-        if summary and why:
+        if ai_sentence_is_complete(summary) and ai_sentence_is_complete(why):
             return summary, why
 
+        print(
+            f"[warn] AI要約が完結文にならなかったため簡易要約に戻します: {title}",
+            file=sys.stderr,
+        )
         return make_simple_summary(title, description, category)
 
     except Exception as e:
@@ -366,20 +485,27 @@ def parse_feed(xml_bytes: bytes, feed: dict, config: dict) -> list[dict]:
     root = ET.fromstring(xml_bytes)
 
     items = root.findall(".//item")
+
     if not items:
-        items = [elem for elem in root.iter() if elem.tag.split("}")[-1] == "entry"]
+        items = [
+            elem
+            for elem in root.iter()
+            if elem.tag.split("}")[-1] == "entry"
+        ]
 
     articles = []
 
     for item in items:
         title = normalize_text(find_child_text(item, ["title"]))
         url = normalize_text(find_child_text(item, ["link"]))
+
         description = clean_description(
             find_child_text(
                 item,
                 ["description", "summary", "content", "encoded"],
             )
         )
+
         pub_raw = normalize_text(
             find_child_text(
                 item,
@@ -391,12 +517,14 @@ def parse_feed(xml_bytes: bytes, feed: dict, config: dict) -> list[dict]:
             continue
 
         published_dt = parse_date(pub_raw)
+
         category = classify_category(
             title,
             description,
             feed.get("category", "未分類"),
             config,
         )
+
         score = score_article(
             title,
             description,
@@ -406,7 +534,7 @@ def parse_feed(xml_bytes: bytes, feed: dict, config: dict) -> list[dict]:
             config,
         )
 
-        # 最初は簡易要約を入れておき、後でAI要約で上書きする
+        # まず簡易要約を入れておき、後でAI要約に成功した場合だけ上書きする。
         summary, why = make_simple_summary(title, description, category)
 
         articles.append(
@@ -506,8 +634,10 @@ def save_articles(articles: list[dict]) -> None:
 def score_class(score: int) -> str:
     if score >= 80:
         return "score"
+
     if score >= 60:
         return "score mid"
+
     return "score low"
 
 
@@ -703,6 +833,7 @@ def render_html(articles: list[dict], config: dict) -> str:
 
     for category in all_categories:
         items = [a for a in articles if a["category"] == category]
+
         if not items:
             continue
 
@@ -734,7 +865,7 @@ def render_html(articles: list[dict], config: dict) -> str:
         <div class="hero">
           <div style="font-size:46px">☕</div>
           <h1>{title}</h1>
-          <p>RSSから記事を取得し、朝のニュースまとめを表示します。</p>
+          <p>RSSから記事を取得し、AI要約付きの朝のニュースまとめを表示します。</p>
           <span class="pill">📅 生成日時: {escape(now_label)}</span>
           <span class="pill">📰 表示記事: {len(articles)}件</span>
         </div>
@@ -776,6 +907,7 @@ def main() -> None:
                 feed,
                 config,
             )
+
             print(f"       -> {len(articles)}件")
             all_articles.extend(articles)
 
@@ -799,6 +931,7 @@ def main() -> None:
     save_articles(deduped)
 
     OUTPUT_DIR.mkdir(exist_ok=True)
+
     HTML_PATH.write_text(
         render_html(deduped, config),
         encoding="utf-8",
