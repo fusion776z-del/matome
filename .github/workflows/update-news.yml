@@ -2,8 +2,18 @@ name: Update Morning News
 
 on:
   workflow_dispatch:
+
   schedule:
+    # 毎日 22:00 UTC = 日本時間 07:00
     - cron: "0 22 * * *"
+
+  push:
+    branches:
+      - main
+    paths:
+      - "morning_news_digest/**"
+      - "morning_news_notion_style.html"
+      - ".github/workflows/update-news.yml"
 
 permissions:
   contents: read
@@ -17,6 +27,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -52,9 +63,11 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
