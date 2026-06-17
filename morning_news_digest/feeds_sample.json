@@ -1,0 +1,17 @@
+{
+  "page_title": "自分用・朝のニュースまとめ",
+  "max_articles": 20,
+  "top_pick_count": 3,
+  "request_timeout_seconds": 15,
+  "keywords": ["AI", "生成AI", "Microsoft", "半導体", "北海道", "函館"],
+  "exclude_keywords": ["芸能ゴシップ", "占い"],
+  "category_rules": {
+    "AI・テック": ["AI", "生成AI", "LLM", "Microsoft", "OpenAI", "半導体", "クラウド", "サイバー", "セキュリティ"],
+    "ビジネス": ["経済", "市場", "株", "決算", "企業", "為替", "金利", "日銀"],
+    "北海道・函館": ["北海道", "函館", "札幌", "道南", "渡島", "檜山"],
+    "国内": ["政府", "国会", "選挙", "首相", "省", "庁", "自治体"]
+  },
+  "feeds": [
+    {"name": "NHKニュース", "url": "https://www.nhk.or.jp/rss/news/cat0.xml", "category": "国内", "trust_score": 15}
+  ]
+}
