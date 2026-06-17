@@ -3,8 +3,7 @@ name: Update Morning News
 on:
   workflow_dispatch:
   schedule:
-    # JST 06:30 = UTC 21:30 前日
-    - cron: "30 21 * * *"
+    - cron: "0 22 * * *"
 
 permissions:
   contents: read
@@ -18,7 +17,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,19 +24,17 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: "3.11"
 
-      - name: Prepare feeds.json
+      - name: Install dependencies
         working-directory: morning_news_digest
-        run: |
-          if [ ! -f feeds.json ]; then
-            cp feeds_sample.json feeds.json
-          fi
+        run: pip install -r requirements.txt
 
       - name: Generate morning news HTML
         working-directory: morning_news_digest
-        run: |
-          python generate_morning_news.py
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python generate_morning_news.py
 
       - name: Prepare GitHub Pages files
         run: |
@@ -49,18 +45,16 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Upload GitHub Pages artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v3
         with:
           path: public
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
-
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
