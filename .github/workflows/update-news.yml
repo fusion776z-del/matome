@@ -3,16 +3,15 @@ name: Update Morning News
 on:
   workflow_dispatch:
 
+  # ✅ 1時間に1回（混雑回避のため17分）
   schedule:
-    # 1時間に1回
-    - cron: "0 * * * *"
+    - cron: "17 * * * *"
 
   push:
     branches:
       - main
     paths:
       - "morning_news_digest/**"
-      - "morning_news_notion_style.html"
       - ".github/workflows/update-news.yml"
 
 permissions:
@@ -29,6 +28,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # ✅ schedule確認用ログ（超重要）
+      - name: Show trigger info
+        run: |
+          echo "event_name=${{ github.event_name }}"
+          echo "schedule=${{ github.event.schedule }}"
+          echo "time=$(date)"
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
