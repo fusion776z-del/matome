@@ -162,9 +162,60 @@ def find_child_text(item: ET.Element, names: list[str]) -> str:
 
 def classify_category(title: str, description: str, default: str, config: dict) -> str:
     text = f"{title} {description}".lower()
+
+    # 日本経済を優先判定
+    japan_terms = [
+        "日本経済",
+        "日銀",
+        "円安",
+        "円高",
+        "日本株",
+        "東証",
+        "国内市場",
+        "企業物価",
+        "消費者物価",
+        "賃上げ",
+        "春闘",
+        "日本のgdp",
+        "日本 gdp"
+    ]
+
+    if any(term.lower() in text for term in japan_terms):
+        return "日本経済"
+
+    # 米国経済を優先判定
+    us_terms = [
+        "米国経済",
+        "アメリカ経済",
+        "frb",
+        "fomc",
+        "fed",
+        "ドル",
+        "米雇用",
+        "雇用統計",
+        "米cpi",
+        "cpi",
+        "pce",
+        "インフレ",
+        "nasdaq",
+        "ナスダック",
+        "dow",
+        "ダウ",
+        "s&p",
+        "treasury",
+        "米国債",
+        "利下げ",
+        "利上げ"
+    ]
+
+    if any(term.lower() in text for term in us_terms):
+        return "米国経済"
+
+    # 通常ルール
     for category, words in config.get("category_rules", {}).items():
         if any(word.lower() in text for word in words):
             return category
+
     return default or "未分類"
 
 
