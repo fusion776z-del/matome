@@ -532,7 +532,7 @@ def render_html(groups: list[dict], articles: list[dict], config: dict) -> str:
       <a class="nav-item" href="#digest">☕ 今日の朝刊</a>
       <a class="nav-item" href="#categories">🗂️ カテゴリ別</a>
       <div class="nav-divider"></div>
-      <button class="nav-button" type="button" onclick="window.location.reload()">🔄 更新</button>
+      <button class="nav-button" type="button" onclick="window.location.reload()">🔄 再読み込み</button>
       <a class="nav-button" href="#overview">⬆️ TOPに戻る</a>
     </aside>
     <main>
@@ -543,7 +543,7 @@ def render_html(groups: list[dict], articles: list[dict], config: dict) -> str:
       </section>
     </main>
   </div>
-  <div class="floating-actions"><button type="button" onclick="window.location.reload()">🔄 更新</button><a href="#overview">⬆️ TOP</a></div>
+  <div class="floating-actions"><button type="button" onclick="window.location.reload()">🔄 再読み込み</button><a href="#overview">⬆️ TOP</a></div>
 </body>
 </html>
 """
