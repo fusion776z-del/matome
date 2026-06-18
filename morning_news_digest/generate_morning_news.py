@@ -664,14 +664,13 @@ def render_html(groups: list[dict], articles: list[dict], config: dict) -> str:
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{title}</title><style>{css()}</style></head>
 <body>
   <div class="app">
-    <aside>
-      <h2>🗞️ ニュースダイジェスト</h2>
-      <a class="nav-item" href="#overview">🏠 概要</a>
-      <a class="nav-item" href="#categories">🗂️ カテゴリ別</a>
-      <div class="nav-divider"></div>
-      <button class="nav-button" type="button" onclick="window.location.reload()">🔄 再読み込み</button>
-      <a class="nav-button" href="#overview">⬆️ TOPに戻る</a>
-    </aside>
+
+<aside>
+  <h2>🗞️ ニュースダイジェスト</h2>
+  <a class="nav-item" href="#overview">🏠 概要</a>
+  <a class="nav-item" href="#categories">🗂️ カテゴリ別</a>
+</aside>
+
     <main>
       <section class="page" id="overview">
         <div class="hero"><div style="font-size:46px">☕</div><h1>{title}</h1><p>複数RSSから記事を取得し、近い話題を束ねてAIで総合要約しました。</p><span class="pill">📅 生成日時: {escape(now_label)}</span><span class="pill">📰 取得記事: {len(articles)}件</span><span class="pill">🧩 話題グループ: {len(groups)}件</span><span class="pill">🗞️ 出典: {escape(source_label)}</span></div>
