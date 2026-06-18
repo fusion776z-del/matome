@@ -305,9 +305,11 @@ def extract_json_object(text: str) -> dict:
     return json.loads(raw[start : end + 1])
 
 
+
 def build_aggregate_prompt(group: dict, config: dict, retry: bool = False) -> str:
     max_articles_per_topic = int(config.get("max_articles_per_topic", 5))
     articles = group["articles"][:max_articles_per_topic]
+
     article_lines = []
     for index, article in enumerate(articles, start=1):
         article_lines.append(f"""
@@ -318,46 +320,96 @@ def build_aggregate_prompt(group: dict, config: dict, retry: bool = False) -> st
 概要: {article.get('description') or article.get('summary')}
 URL: {article['url']}
 """.strip())
-    retry_note = "\n前回の出力が未完の文、または三点リーダー終わりでした。必ず完結した文に直してください。" if retry else ""
+
+    retry_note = ""
+    if retry:
+        retry_note = "\n前回の出力で summary が英語のまま、または文が未完でした。summary、why、source_note は必ず自然な日本語の完結文にしてください。"
+
     return f"""
 以下は同じ、または近い話題として収集された記事です。
-複数ソースを比較し、共通して確認できる事実を優先して日本語で総合要約してください。
+複数ソースを比較し、共通して確認できる事実を優先して総合要約してください。
 必ずJSONのみで返してください。Markdownや説明文は付けないでください。
 
 出力形式:
 {{
-  "headline": "総合見出しを1文で",
-  "summary": "何が起きたかを1〜2文で",
-  "source_note": "出典の扱いを短く",
+  "headline": "総合見出しを1文で。英語タイトルを活かしてもよい",
+  "summary": "何が起きたかを日本語で1〜2文で",
+  "why": "どのような人・分野にどう影響するかを日本語で具体的に1文で。明確でない場合は空文字",
+  "source_note": "出典の扱いを日本語で短く",
   "confidence": "high | medium | low"
 }}
 
 条件:
-- 出力は必ず日本語にする
-- 英語の記事は自然な日本語に翻訳してから要約する
-- 直訳ではなく、日本人が読みやすい文章にする
-- headline、summary、why、source_note に英語の本文や英語見出しをそのまま残さない
-- ただし、CNBC、FRB、FOMC、AI、Microsoft、OpenAI、NASDAQ、S&P 500 などの固有名詞・略語は英語表記のままでよい
+【言語】
+- headline は元記事の英語タイトルを活かしてもよい。ただし、日本語で自然に要約できる場合は日本語にしてよい
+- summary は必ず日本語で書く
+- 英語記事の summary は、英語の内容を自然な日本語に翻訳して説明する
+- summary に英語本文や英語見出しをそのまま残さない
+- why を出す場合は必ず日本語で書く
+- source_note は必ず日本語で書く
+- CNBC、FRB、FOMC、AI、Microsoft、OpenAI、NASDAQ、S&P 500 などの固有名詞・略語は英語表記のままでよい
+
+【基本方針】
 - 複数ソースで共通して確認できる事実を最優先する
 - 1つのソースにしかない情報は「一部報道では」「○○によると」と表現する
 - RSS概要に書かれていない背景、原因、影響を勝手に補完しない
-- タイトルだけから断定しない
+- タイトルだけから内容を断定しない
 - 数字、金額、日付、人物名、組織名は入力記事にあるものだけ使う
 - 出典間で内容がずれている場合は、断定せず「報道内容に差があります」と書く
 - 情報が不足している場合は「詳細は記事本文で確認が必要です。」と書く
-- headline は短く、煽らない
-- summary は「何が起きたか」に集中する
+
+【headline】
+- 短く、煽らない
+- 最大80文字以内
+- 英語のままでもよい
 - 文末を「…」「...」「⋯」で終えない
-- headline、summary、source_note は完結した文にする
-- 各項目は300文字以内
-- confidence は次の基準で選ぶ
-  - high: 複数ソースで同じ主要事実が確認できる
-  - medium: 単独ソース、または近い話題だが主要事実は比較的明確
-  - low: 情報不足、出典間差異、または同一話題か不確実{retry_note}
+
+【summary】
+- 「何が起きたか」に集中する
+- 必ず日本語で書く
+- 英語記事の場合は和訳したうえで、日本語のニュース要約として自然に説明する
+- 推測や感想を書かない
+- 最大300文字以内
+- 文末を「…」「...」「⋯」で終えない
+- 完結した文にする
+
+【why】
+- 日本語で書く
+- 「誰に」「何が」「どう変わるか」を必ず含める
+- 抽象表現は禁止する
+  - 悪い例: 「重要です」「影響があります」「注目です」
+- 対象はできるだけ具体的に書く
+  - 例: 企業のIT部門、個人投資家、北海道の住民、輸出企業、消費者、開発者
+- 以下のどれかの観点で書く
+  - 仕事: 企業、業務、IT、開発、採用
+  - 生活: 物価、消費、安全、制度
+  - 地域: 交通、観光、災害、自治体
+  - 経済: 金利、為替、株価、雇用、企業活動
+  - 技術: 開発、導入、競争、セキュリティ
+- 入力情報から明確な影響が読み取れない場合は "" にする
+- 最大300文字以内
+- 空文字でない場合は日本語の完結した文にする
+- 文末を「…」「...」「⋯」で終えない
+
+【source_note】
+- 日本語で書く
+- 出典の扱いを簡潔に説明する
+- 最大120文字以内
+- 例:
+  - 「複数ソースで共通内容を要約しました。」
+  - 「単独ソースの速報ベースです。」
+  - 「一部情報は単独ソースに基づきます。」
+- 文末を「…」「...」「⋯」で終えない
+
+【confidence】
+- high: 複数ソースで同じ主要事実が確認できる
+- medium: 単独ソース、または近い話題だが主要事実は比較的明確
+- low: 情報不足、出典間差異、または同一話題か不確実{retry_note}
 
 記事一覧:
 {chr(10).join(article_lines)}
 """.strip()
+
 
 
 def call_ai_aggregate_once(client, model: str, group: dict, config: dict, retry: bool = False) -> dict:
