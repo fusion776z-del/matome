@@ -120,5 +120,19 @@
       "category": "AI・テック",
       "trust_score": 12
     }
+ {
+  "name": "朝日新聞 経済・マネー",
+  "url": "http://rss.asahi.com/rss/asahi/business.rdf",
+  "category": "ビジネス",
+  "trust_score": 12
+},
+{
+  "name": "CNBC Economy",
+  "url": "https://www.cnbc.com/id/20910258/device/rss/rss.html",
+  "category": "ビジネス",
+  "trust_score": 11
+} 
   ]
+  
+  
 }
