@@ -527,7 +527,7 @@ def render_html(groups: list[dict], articles: list[dict], config: dict) -> str:
 <body>
   <div class="app">
     <aside>
-      <h2>🗞️ Morning Digest</h2>
+      <h2>🗞️ ニュースダイジェスト</h2>
       <a class="nav-item" href="#overview">🏠 概要</a>
       <a class="nav-item" href="#digest">☕ 今日の朝刊</a>
       <a class="nav-item" href="#categories">🗂️ カテゴリ別</a>
