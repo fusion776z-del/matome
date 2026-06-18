@@ -529,7 +529,6 @@ def render_html(groups: list[dict], articles: list[dict], config: dict) -> str:
     <aside>
       <h2>🗞️ ニュースダイジェスト</h2>
       <a class="nav-item" href="#overview">🏠 概要</a>
-      <a class="nav-item" href="#digest">☕ 今日の朝刊</a>
       <a class="nav-item" href="#categories">🗂️ カテゴリ別</a>
       <div class="nav-divider"></div>
       <button class="nav-button" type="button" onclick="window.location.reload()">🔄 再読み込み</button>
