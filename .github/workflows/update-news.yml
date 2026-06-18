@@ -3,9 +3,10 @@ name: Update Morning News
 on:
   workflow_dispatch:
 
-  # ✅ 1時間に1回（混雑回避のため17分）
   schedule:
+    # GitHub Actions の schedule は取りこぼすことがあるため、毎時2回チャンスを作る
     - cron: "17 * * * *"
+    - cron: "47 * * * *"
 
   push:
     branches:
@@ -28,12 +29,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ✅ schedule確認用ログ（超重要）
       - name: Show trigger info
         run: |
           echo "event_name=${{ github.event_name }}"
           echo "schedule=${{ github.event.schedule }}"
-          echo "time=$(date)"
+          echo "ref=${{ github.ref }}"
+          echo "time_utc=$(date -u)"
 
       - name: Checkout repository
         uses: actions/checkout@v4
