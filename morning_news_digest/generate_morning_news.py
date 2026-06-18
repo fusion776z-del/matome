@@ -134,7 +134,13 @@ def parse_date(value: str) -> datetime:
 
 
 def fetch_url(url: str, timeout: int) -> bytes:
-    req = urllib.request.Request(url, headers={"User-Agent": "MorningNewsDigest/1.0 (+personal-use)", "Accept": "application/rss+xml, application/xml, text/xml, */*"})
+    req = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": "MorningNewsDigest/1.0 (+personal-use)",
+            "Accept": "application/rss+xml, application/xml, text/xml, */*",
+        },
+    )
     with urllib.request.urlopen(req, timeout=timeout) as res:
         return res.read()
 
@@ -190,6 +196,7 @@ def make_simple_summary(title: str, description: str, category: str) -> tuple[st
         "国内": "国内情勢や制度変更に関係する可能性があります。",
         "国際": "海外情勢や市場・安全保障への波及を確認する価値があります。",
     }
+    # DB互換用に why も返すが、HTML表示とAI総合要約では使わない。
     return summary, why_map.get(category, "関心キーワードや生活・仕事への関連度を確認する価値があります。")
 
 
@@ -208,7 +215,17 @@ def parse_feed(xml_bytes: bytes, feed: dict, config: dict) -> list[dict]:
         category = classify_category(title, description, feed.get("category", "未分類"), config)
         score = score_article(title, description, category, published_dt, feed, config)
         summary, why = make_simple_summary(title, description, category)
-        articles.append({"title": title, "url": url, "source": feed.get("name", "Unknown"), "category": category, "published_at": published_dt.isoformat(timespec="minutes"), "description": description, "summary": summary, "why": why, "score": score})
+        articles.append({
+            "title": title,
+            "url": url,
+            "source": feed.get("name", "Unknown"),
+            "category": category,
+            "published_at": published_dt.isoformat(timespec="minutes"),
+            "description": description,
+            "summary": summary,
+            "why": why,
+            "score": score,
+        })
     return articles
 
 
@@ -311,7 +328,6 @@ URL: {article['url']}
 {{
   "headline": "総合見出しを1文で",
   "summary": "何が起きたかを1〜2文で",
-  "why": "なぜ重要かを1文で",
   "source_note": "出典の扱いを短く",
   "confidence": "high | medium | low"
 }}
@@ -326,9 +342,8 @@ URL: {article['url']}
 - 情報が不足している場合は「詳細は記事本文で確認が必要です。」と書く
 - headline は短く、煽らない
 - summary は「何が起きたか」に集中する
-- why は生活、仕事、地域、経済、技術への影響のどれかに絞る
 - 文末を「…」「...」「⋯」で終えない
-- headline、summary、why、source_note は完結した文にする
+- headline、summary、source_note は完結した文にする
 - 各項目は180文字以内
 - confidence は次の基準で選ぶ
   - high: 複数ソースで同じ主要事実が確認できる
@@ -343,7 +358,12 @@ URL: {article['url']}
 def call_ai_aggregate_once(client, model: str, group: dict, config: dict, retry: bool = False) -> dict:
     response = client.responses.create(model=model, input=build_aggregate_prompt(group, config=config, retry=retry))
     data = extract_json_object(response.output_text)
-    return {"headline": normalize_ai_sentence(data.get("headline", "")), "summary": normalize_ai_sentence(data.get("summary", "")), "why": normalize_ai_sentence(data.get("why", "")), "source_note": normalize_ai_sentence(data.get("source_note", "")), "confidence": normalize_confidence(data.get("confidence", "medium"))}
+    return {
+        "headline": normalize_ai_sentence(data.get("headline", "")),
+        "summary": normalize_ai_sentence(data.get("summary", "")),
+        "source_note": normalize_ai_sentence(data.get("source_note", "")),
+        "confidence": normalize_confidence(data.get("confidence", "medium")),
+    }
 
 
 def aggregate_fallback(group: dict) -> dict:
@@ -356,7 +376,12 @@ def aggregate_fallback(group: dict) -> dict:
     else:
         source_note = "単独ソースの記事をもとにした抜粋です。"
         confidence = "low"
-    return {"headline": main["title"], "summary": main.get("summary") or trim_excerpt(main.get("description", ""), 160), "why": main.get("why") or "生活や仕事への影響を確認する価値があります。", "source_note": source_note, "confidence": confidence}
+    return {
+        "headline": main["title"],
+        "summary": main.get("summary") or trim_excerpt(main.get("description", ""), 160),
+        "source_note": source_note,
+        "confidence": confidence,
+    }
 
 
 def aggregate_summary(group: dict, config: dict) -> dict:
@@ -370,7 +395,7 @@ def aggregate_summary(group: dict, config: dict) -> dict:
         client = OpenAI(api_key=api_key)
         model = os.environ.get("OPENAI_MODEL") or config.get("ai_model", "gpt-4.1-mini")
         result = call_ai_aggregate_once(client, model, group, config=config, retry=False)
-        required_sentence_fields = ["headline", "summary", "why", "source_note"]
+        required_sentence_fields = ["headline", "summary", "source_note"]
         if not all(ai_sentence_is_complete(result.get(k, "")) for k in required_sentence_fields):
             result = call_ai_aggregate_once(client, model, group, config=config, retry=True)
         if all(ai_sentence_is_complete(result.get(k, "")) for k in required_sentence_fields):
@@ -392,7 +417,8 @@ def enrich_groups_with_ai(groups: list[dict], config: dict) -> list[dict]:
 
 def save_articles(articles: list[dict]) -> None:
     with sqlite3.connect(DB_PATH) as conn:
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS articles (
                 url TEXT PRIMARY KEY,
                 title TEXT NOT NULL,
@@ -405,9 +431,13 @@ def save_articles(articles: list[dict]) -> None:
                 importance_score INTEGER,
                 inserted_at TEXT NOT NULL
             )
-        """)
+            """
+        )
         now = datetime.now(JST).isoformat(timespec="seconds")
-        conn.executemany("INSERT OR REPLACE INTO articles VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [(a["url"], a["title"], a["source"], a["category"], a["published_at"], a["description"], a["summary"], a["why"], a["score"], now) for a in articles])
+        conn.executemany(
+            "INSERT OR REPLACE INTO articles VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [(a["url"], a["title"], a["source"], a["category"], a["published_at"], a["description"], a["summary"], a["why"], a["score"], now) for a in articles],
+        )
 
 
 def score_class(score: int) -> str:
@@ -426,13 +456,15 @@ def render_related_links(articles: list[dict], config: dict) -> str:
     max_articles_per_topic = int(config.get("max_articles_per_topic", 5))
     links = []
     for article in articles[:max_articles_per_topic]:
-        links.append(f"""
+        links.append(
+            f"""
             <li>
               <a href="{escape(article['url'])}" target="_blank" rel="noopener noreferrer">
                 {escape(article['source'])}: {escape(article['title'])}
               </a>
             </li>
-        """)
+            """
+        )
     if len(articles) > max_articles_per_topic:
         links.append(f"<li>ほか {len(articles) - max_articles_per_topic} 件</li>")
     return '<ul class="related">' + "\n".join(links) + "</ul>"
@@ -455,9 +487,12 @@ def render_topic_card(group: dict, config: dict) -> str:
       </div>
       <div class="title">{escape(aggregate['headline'])}</div>
       <p><strong>何が起きたか:</strong> {escape(aggregate['summary'])}</p>
-      <p><strong>なぜ重要か:</strong> {escape(aggregate['why'])}</p>
       <p><strong>出典メモ:</strong> {escape(aggregate['source_note'])}</p>
-      <div class="source">カテゴリ: {escape(group.get('category', '未分類'))} / 重要度: <span class="{score_class(max_score)}">{max_score}</span> / 参照記事: {len(articles)}件</div>
+      <div class="source">
+        カテゴリ: {escape(group.get('category', '未分類'))} /
+        重要度: <span class="{score_class(max_score)}">{max_score}</span> /
+        参照記事: {len(articles)}件
+      </div>
       {render_related_links(articles, config)}
     </article>
     """
