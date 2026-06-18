@@ -26,26 +26,37 @@ ELLIPSIS_SUFFIXES = ("…", "...", "⋯")
 SENTENCE_ENDINGS = ("。", "！", "？", ".", "!", "?")
 
 DEFAULT_CONFIG = {
-    "page_title": "自分用・朝のニュースまとめ",
+    "page_title": "自分用ニュースまとめ",
     "max_articles": 40,
     "top_pick_count": 5,
-    "max_topic_groups": 12,
+    "max_topic_groups": 25,
     "max_articles_per_topic": 5,
     "request_timeout_seconds": 15,
     "ai_summary_enabled": True,
     "aggregate_summary_enabled": True,
     "ai_model": "gpt-4.1-mini",
-    "keywords": ["AI", "生成AI", "Microsoft", "OpenAI", "半導体", "北海道", "函館", "経済", "物価", "セキュリティ", "クラウド"],
+    "keywords": [
+        "AI", "生成AI", "Microsoft", "OpenAI", "半導体", "北海道", "函館",
+        "経済", "日本経済", "米国経済", "アメリカ経済", "物価", "セキュリティ", "クラウド",
+        "日銀", "FRB", "FOMC", "金利", "為替", "円安", "円高", "ドル",
+        "インフレ", "雇用統計", "GDP", "株価", "市場",
+    ],
     "exclude_keywords": ["芸能ゴシップ", "占い"],
     "category_rules": {
+        "日本経済": ["日本経済", "日銀", "円安", "円高", "日本株", "東証", "国内市場", "企業物価", "消費者物価", "物価", "賃上げ", "春闘", "消費", "景気"],
+        "米国経済": ["米国経済", "アメリカ経済", "FRB", "FOMC", "Fed", "ドル", "雇用統計", "米雇用", "CPI", "PCE", "インフレ", "NASDAQ", "ナスダック", "ダウ", "S&P", "米国債", "利上げ", "利下げ"],
         "AI・テック": ["AI", "生成AI", "LLM", "Microsoft", "OpenAI", "Gemini", "Claude", "半導体", "クラウド", "サイバー", "セキュリティ", "データセンター", "ロボット", "スマートフォン", "Android", "iPhone", "アプリ", "IT"],
-        "ビジネス": ["経済", "市場", "株", "決算", "企業", "為替", "金利", "日銀", "物価", "値上げ", "賃上げ", "景気", "投資", "銀行", "消費"],
+        "ビジネス": ["市場", "株", "株価", "決算", "企業", "投資", "銀行", "金融", "為替", "金利"],
         "北海道・函館": ["北海道", "函館", "札幌", "道南", "渡島", "檜山", "知床", "旭川", "小樽"],
         "国内": ["政府", "国会", "選挙", "首相", "省", "庁", "自治体", "制度", "法案", "裁判", "警察", "事故"],
         "国際": ["米国", "中国", "韓国", "ロシア", "欧州", "EU", "中東", "ウクライナ", "外交", "国連"],
     },
     "feeds": [
-        {"name": "NHKニュース", "url": "https://news.web.nhk/n-data/conf/na/rss/cat0.xml", "category": "国内", "trust_score": 15}
+        {"name": "NHKニュース", "url": "https://news.web.nhk/n-data/conf/na/rss/cat0.xml", "category": "国内", "trust_score": 15},
+        {"name": "朝日新聞デジタル", "url": "https://rss.asahi.com/rss/asahi/newsheadlines.rdf", "category": "国内", "trust_score": 12},
+        {"name": "ITmedia NEWS", "url": "https://rss.itmedia.co.jp/rss/2.0/news_bursts.xml", "category": "AI・テック", "trust_score": 12},
+        {"name": "朝日新聞 経済・マネー", "url": "http://rss.asahi.com/rss/asahi/business.rdf", "category": "日本経済", "trust_score": 12},
+        {"name": "CNBC Economy", "url": "https://www.cnbc.com/id/20910258/device/rss/rss.html", "category": "米国経済", "trust_score": 11},
     ],
 }
 
@@ -60,8 +71,10 @@ def ensure_config() -> dict:
     if not FEEDS_PATH.exists():
         FEEDS_PATH.write_text(json.dumps(DEFAULT_CONFIG, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"feeds.json がなかったため、サンプルを作成しました: {FEEDS_PATH}")
+
     with FEEDS_PATH.open("r", encoding="utf-8") as f:
         user_config = json.load(f)
+
     merged = DEFAULT_CONFIG.copy()
     merged.update(user_config)
     return merged
@@ -107,6 +120,16 @@ def normalize_confidence(value: str) -> str:
 
 def confidence_label(value: str) -> str:
     return {"high": "高", "medium": "中", "low": "低"}.get(normalize_confidence(value), "中")
+
+
+def looks_untranslated_english(text: str) -> bool:
+    text = str(text or "").strip()
+    if not text:
+        return False
+    if re.search(r"[ぁ-んァ-ン一-龥]", text):
+        return False
+    alpha_count = len(re.findall(r"[A-Za-z]", text))
+    return alpha_count >= 20
 
 
 def trim_excerpt(text: str, max_length: int = 160) -> str:
@@ -163,59 +186,24 @@ def find_child_text(item: ET.Element, names: list[str]) -> str:
 def classify_category(title: str, description: str, default: str, config: dict) -> str:
     text = f"{title} {description}".lower()
 
-    # 日本経済を優先判定
     japan_terms = [
-        "日本経済",
-        "日銀",
-        "円安",
-        "円高",
-        "日本株",
-        "東証",
-        "国内市場",
-        "企業物価",
-        "消費者物価",
-        "賃上げ",
-        "春闘",
-        "日本のgdp",
-        "日本 gdp"
+        "日本経済", "日銀", "円安", "円高", "日本株", "東証", "国内市場",
+        "企業物価", "消費者物価", "賃上げ", "春闘", "日本のgdp", "日本 gdp",
     ]
-
     if any(term.lower() in text for term in japan_terms):
         return "日本経済"
 
-    # 米国経済を優先判定
     us_terms = [
-        "米国経済",
-        "アメリカ経済",
-        "frb",
-        "fomc",
-        "fed",
-        "ドル",
-        "米雇用",
-        "雇用統計",
-        "米cpi",
-        "cpi",
-        "pce",
-        "インフレ",
-        "nasdaq",
-        "ナスダック",
-        "dow",
-        "ダウ",
-        "s&p",
-        "treasury",
-        "米国債",
-        "利下げ",
-        "利上げ"
+        "米国経済", "アメリカ経済", "frb", "fomc", "fed", "ドル", "米雇用", "雇用統計",
+        "米cpi", "cpi", "pce", "インフレ", "nasdaq", "ナスダック", "dow", "ダウ",
+        "s&p", "treasury", "米国債", "利下げ", "利上げ",
     ]
-
     if any(term.lower() in text for term in us_terms):
         return "米国経済"
 
-    # 通常ルール
     for category, words in config.get("category_rules", {}).items():
         if any(word.lower() in text for word in words):
             return category
-
     return default or "未分類"
 
 
@@ -224,9 +212,14 @@ def score_article(title: str, description: str, category: str, published_dt: dat
     score = 30
     score += sum(15 for kw in config.get("keywords", []) if kw.lower() in text)
     score -= sum(40 for kw in config.get("exclude_keywords", []) if kw.lower() in text)
-    if category in {"AI・テック", "北海道・函館"}:
+
+    if category in {"日本経済", "米国経済"}:
+        score += 18
+    elif category in {"AI・テック", "北海道・函館"}:
         score += 10
+
     score += int(feed.get("trust_score", 0))
+
     age_hours = max(0, (datetime.now(JST) - published_dt).total_seconds() / 3600)
     if age_hours <= 6:
         score += 20
@@ -241,14 +234,15 @@ def make_simple_summary(title: str, description: str, category: str) -> tuple[st
     desc = clean_description(description)
     summary = trim_excerpt(desc, max_length=160) if desc else f"『{title}』に関するニュースです。"
     why_map = {
-        "AI・テック": "情報収集・仕事の自動化・技術トレンドに影響する可能性があります。",
-        "ビジネス": "市場や企業活動の変化として、仕事や生活コストに関係する可能性があります。",
+        "日本経済": "日本の金利、為替、物価、企業活動に関わるニュースです。",
+        "米国経済": "米国の金利、雇用、物価、金融市場に関わるニュースです。",
+        "AI・テック": "情報収集・仕事の自動化・技術トレンドに関わるニュースです。",
+        "ビジネス": "市場や企業活動の変化として、仕事や生活コストに関わるニュースです。",
         "北海道・函館": "地域の生活・移動・イベント・行政情報として確認する価値があります。",
-        "国内": "国内情勢や制度変更に関係する可能性があります。",
-        "国際": "海外情勢や市場・安全保障への波及を確認する価値があります。",
+        "国内": "国内情勢や制度変更に関係するニュースです。",
+        "国際": "海外情勢や市場・安全保障への波及を確認するニュースです。",
     }
-    # DB互換用に why も返すが、HTML表示とAI総合要約では使わない。
-    return summary, why_map.get(category, "関心キーワードや生活・仕事への関連度を確認する価値があります。")
+    return summary, why_map.get(category, "関心キーワードや生活・仕事への関連度を確認するニュースです。")
 
 
 def parse_feed(xml_bytes: bytes, feed: dict, config: dict) -> list[dict]:
@@ -260,23 +254,27 @@ def parse_feed(xml_bytes: bytes, feed: dict, config: dict) -> list[dict]:
         url = normalize_text(find_child_text(item, ["link"]))
         description = clean_description(find_child_text(item, ["description", "summary", "content", "encoded"]))
         pub_raw = normalize_text(find_child_text(item, ["pubDate", "published", "updated", "date"]))
+
         if not title or not url:
             continue
+
         published_dt = parse_date(pub_raw)
         category = classify_category(title, description, feed.get("category", "未分類"), config)
         score = score_article(title, description, category, published_dt, feed, config)
         summary, why = make_simple_summary(title, description, category)
-        articles.append({
-            "title": title,
-            "url": url,
-            "source": feed.get("name", "Unknown"),
-            "category": category,
-            "published_at": published_dt.isoformat(timespec="minutes"),
-            "description": description,
-            "summary": summary,
-            "why": why,
-            "score": score,
-        })
+        articles.append(
+            {
+                "title": title,
+                "url": url,
+                "source": feed.get("name", "Unknown"),
+                "category": category,
+                "published_at": published_dt.isoformat(timespec="minutes"),
+                "description": description,
+                "summary": summary,
+                "why": why,
+                "score": score,
+            }
+        )
     return articles
 
 
@@ -337,12 +335,14 @@ def group_similar_articles(articles: list[dict], config: dict) -> list[dict]:
                 break
         if not placed:
             groups.append({"articles": [article], "score": article["score"]})
+
     for group in groups:
         group["articles"] = sorted(group["articles"], key=lambda x: x["score"], reverse=True)
         group["sources"] = sorted({a["source"] for a in group["articles"]})
         group["category"] = group["articles"][0].get("category", "未分類")
+
     groups = sorted(groups, key=lambda g: (len(g["sources"]), g["score"]), reverse=True)
-    return groups[: int(config.get("max_topic_groups", 12))]
+    return groups[: int(config.get("max_topic_groups", 25))]
 
 
 def extract_json_object(text: str) -> dict:
@@ -356,21 +356,22 @@ def extract_json_object(text: str) -> dict:
     return json.loads(raw[start : end + 1])
 
 
-
 def build_aggregate_prompt(group: dict, config: dict, retry: bool = False) -> str:
     max_articles_per_topic = int(config.get("max_articles_per_topic", 5))
     articles = group["articles"][:max_articles_per_topic]
 
     article_lines = []
     for index, article in enumerate(articles, start=1):
-        article_lines.append(f"""
+        article_lines.append(
+            f"""
 記事{index}:
 出典: {article['source']}
 タイトル: {article['title']}
 カテゴリ: {article['category']}
 概要: {article.get('description') or article.get('summary')}
 URL: {article['url']}
-""".strip())
+""".strip()
+        )
 
     retry_note = ""
     if retry:
@@ -430,13 +431,6 @@ URL: {article['url']}
 - 抽象表現は禁止する
   - 悪い例: 「重要です」「影響があります」「注目です」
 - 対象はできるだけ具体的に書く
-  - 例: 企業のIT部門、個人投資家、北海道の住民、輸出企業、消費者、開発者
-- 以下のどれかの観点で書く
-  - 仕事: 企業、業務、IT、開発、採用
-  - 生活: 物価、消費、安全、制度
-  - 地域: 交通、観光、災害、自治体
-  - 経済: 金利、為替、株価、雇用、企業活動
-  - 技術: 開発、導入、競争、セキュリティ
 - 入力情報から明確な影響が読み取れない場合は "" にする
 - 最大300文字以内
 - 空文字でない場合は日本語の完結した文にする
@@ -446,10 +440,6 @@ URL: {article['url']}
 - 日本語で書く
 - 出典の扱いを簡潔に説明する
 - 最大120文字以内
-- 例:
-  - 「複数ソースで共通内容を要約しました。」
-  - 「単独ソースの速報ベースです。」
-  - 「一部情報は単独ソースに基づきます。」
 - 文末を「…」「...」「⋯」で終えない
 
 【confidence】
@@ -462,13 +452,13 @@ URL: {article['url']}
 """.strip()
 
 
-
 def call_ai_aggregate_once(client, model: str, group: dict, config: dict, retry: bool = False) -> dict:
     response = client.responses.create(model=model, input=build_aggregate_prompt(group, config=config, retry=retry))
     data = extract_json_object(response.output_text)
     return {
         "headline": normalize_ai_sentence(data.get("headline", "")),
         "summary": normalize_ai_sentence(data.get("summary", "")),
+        "why": normalize_ai_sentence(data.get("why", "")),
         "source_note": normalize_ai_sentence(data.get("source_note", "")),
         "confidence": normalize_confidence(data.get("confidence", "medium")),
     }
@@ -486,7 +476,8 @@ def aggregate_fallback(group: dict) -> dict:
         confidence = "low"
     return {
         "headline": main["title"],
-        "summary": main.get("summary") or trim_excerpt(main.get("description", ""), 160),
+        "summary": main.get("summary") or trim_excerpt(main.get("description", ""), 300),
+        "why": "",
         "source_note": source_note,
         "confidence": confidence,
     }
@@ -503,12 +494,21 @@ def aggregate_summary(group: dict, config: dict) -> dict:
         client = OpenAI(api_key=api_key)
         model = os.environ.get("OPENAI_MODEL") or config.get("ai_model", "gpt-4.1-mini")
         result = call_ai_aggregate_once(client, model, group, config=config, retry=False)
+
         required_sentence_fields = ["headline", "summary", "source_note"]
-        if not all(ai_sentence_is_complete(result.get(k, "")) for k in required_sentence_fields):
+        needs_retry = not all(ai_sentence_is_complete(result.get(k, "")) for k in required_sentence_fields)
+        needs_retry = needs_retry or looks_untranslated_english(result.get("summary", ""))
+        needs_retry = needs_retry or looks_untranslated_english(result.get("source_note", ""))
+        if result.get("why"):
+            needs_retry = needs_retry or looks_untranslated_english(result.get("why", ""))
+
+        if needs_retry:
             result = call_ai_aggregate_once(client, model, group, config=config, retry=True)
+
         if all(ai_sentence_is_complete(result.get(k, "")) for k in required_sentence_fields):
             result["confidence"] = normalize_confidence(result.get("confidence", "medium"))
             return result
+
         print("[warn] 総合AI要約が完結文にならなかったためフォールバックします", file=sys.stderr)
         return aggregate_fallback(group)
     except Exception as e:
@@ -586,6 +586,11 @@ def render_topic_card(group: dict, config: dict) -> str:
     max_score = max(a["score"] for a in articles)
     badge = "複数ソース" if len({a["source"] for a in displayed_articles}) >= 2 else "単独ソース"
     confidence = normalize_confidence(aggregate.get("confidence", "medium"))
+
+    why_block = ""
+    if aggregate.get("why"):
+        why_block = f'<p><strong>影響:</strong> {escape(aggregate["why"])}</p>'
+
     return f"""
     <article class="news">
       <div class="topic-meta">
@@ -595,6 +600,7 @@ def render_topic_card(group: dict, config: dict) -> str:
       </div>
       <div class="title">{escape(aggregate['headline'])}</div>
       <p><strong>何が起きたか:</strong> {escape(aggregate['summary'])}</p>
+      {why_block}
       <p><strong>出典メモ:</strong> {escape(aggregate['source_note'])}</p>
       <div class="source">
         カテゴリ: {escape(group.get('category', '未分類'))} /
@@ -615,21 +621,32 @@ def css() -> str:
 
 def render_html(groups: list[dict], articles: list[dict], config: dict) -> str:
     now_label = datetime.now(JST).strftime("%Y年%m月%d日 %H:%M")
-    title = escape(config.get("page_title", "自分用・朝のニュースまとめ"))
+    title = escape(config.get("page_title", "自分用ニュースまとめ"))
     top_pick_count = int(config.get("top_pick_count", 5))
     top_groups = groups[:top_pick_count]
     top_cards = "\n".join(render_topic_card(g, config) for g in top_groups) or "<p>記事がありません。</p>"
-    
-preferred_categories = [
-    "日本経済",
-    "米国経済",
-    "ビジネス",
-    "AI・テック",
-    "国内",
-    "北海道・函館",
-    "国際",
-    "未分類"
-]
+
+    preferred_categories = [
+        "日本経済",
+        "米国経済",
+        "ビジネス",
+        "AI・テック",
+        "国内",
+        "北海道・函館",
+        "国際",
+        "未分類",
+    ]
+
+    icon_map = {
+        "日本経済": "🇯🇵",
+        "米国経済": "🇺🇸",
+        "ビジネス": "📊",
+        "AI・テック": "🤖",
+        "国内": "🏛️",
+        "北海道・函館": "🗺️",
+        "国際": "🌍",
+        "未分類": "📰",
+    }
 
     sections = []
     for category in preferred_categories:
@@ -637,7 +654,9 @@ preferred_categories = [
         if not category_groups:
             continue
         cards = "\n".join(render_topic_card(g, config) for g in category_groups)
-        sections.append(f'<section class="card"><h2>{escape(category)}</h2>{cards}</section>')
+        icon = icon_map.get(category, "📰")
+        sections.append(f'<section class="card"><h2>{icon} {escape(category)}</h2>{cards}</section>')
+
     source_names = sorted({a["source"] for a in articles})
     source_label = " / ".join(source_names) if source_names else "なし"
     return f"""<!doctype html>
@@ -656,7 +675,7 @@ preferred_categories = [
     <main>
       <section class="page" id="overview">
         <div class="hero"><div style="font-size:46px">☕</div><h1>{title}</h1><p>複数RSSから記事を取得し、近い話題を束ねてAIで総合要約しました。</p><span class="pill">📅 生成日時: {escape(now_label)}</span><span class="pill">📰 取得記事: {len(articles)}件</span><span class="pill">🧩 話題グループ: {len(groups)}件</span><span class="pill">🗞️ 出典: {escape(source_label)}</span></div>
-        <h2 id="digest">今日押さえるべき{top_pick_count}つ</h2><div class="card">{top_cards}</div>
+        <h2 id="digest">重要トピック {top_pick_count}</h2><div class="card">{top_cards}</div>
         <h2 id="categories">カテゴリ別ニュース</h2>{''.join(sections)}
       </section>
     </main>
@@ -687,6 +706,7 @@ def main() -> None:
             print(f"[error] {name}: XML/RSSの解析に失敗しました: {e}", file=sys.stderr)
         except Exception as e:
             print(f"[error] {name}: 予期しないエラー: {e}", file=sys.stderr)
+
     deduped = sorted(dedupe_articles(all_articles), key=lambda x: x["score"], reverse=True)
     groups = group_similar_articles(deduped, config)
     groups = enrich_groups_with_ai(groups, config)
