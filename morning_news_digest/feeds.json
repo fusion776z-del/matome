@@ -17,9 +17,24 @@
     "北海道",
     "函館",
     "経済",
+    "日本経済",
+    "米国経済",
+    "アメリカ経済",
     "物価",
     "セキュリティ",
-    "クラウド"
+    "クラウド",
+    "日銀",
+    "FRB",
+    "FOMC",
+    "金利",
+    "為替",
+    "円安",
+    "ドル",
+    "インフレ",
+    "雇用統計",
+    "GDP",
+    "株価",
+    "市場"
   ],
   "exclude_keywords": [
     "芸能ゴシップ",
@@ -48,13 +63,24 @@
     ],
     "ビジネス": [
       "経済",
+      "日本経済",
+      "米国経済",
+      "アメリカ経済",
       "市場",
       "株",
+      "株価",
       "決算",
       "企業",
       "為替",
+      "円安",
+      "ドル",
       "金利",
       "日銀",
+      "FRB",
+      "FOMC",
+      "インフレ",
+      "雇用統計",
+      "GDP",
       "物価",
       "値上げ",
       "賃上げ",
@@ -119,20 +145,18 @@
       "url": "https://rss.itmedia.co.jp/rss/2.0/news_bursts.xml",
       "category": "AI・テック",
       "trust_score": 12
+    },
+    {
+      "name": "朝日新聞 経済・マネー",
+      "url": "http://rss.asahi.com/rss/asahi/business.rdf",
+      "category": "ビジネス",
+      "trust_score": 12
+    },
+    {
+      "name": "CNBC Economy",
+      "url": "https://www.cnbc.com/id/20910258/device/rss/rss.html",
+      "category": "ビジネス",
+      "trust_score": 11
     }
- {
-  "name": "朝日新聞 経済・マネー",
-  "url": "http://rss.asahi.com/rss/asahi/business.rdf",
-  "category": "ビジネス",
-  "trust_score": 12
-},
-{
-  "name": "CNBC Economy",
-  "url": "https://www.cnbc.com/id/20910258/device/rss/rss.html",
-  "category": "ビジネス",
-  "trust_score": 11
-} 
   ]
-  
-  
 }
