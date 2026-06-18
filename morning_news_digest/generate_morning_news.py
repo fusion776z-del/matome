@@ -619,7 +619,18 @@ def render_html(groups: list[dict], articles: list[dict], config: dict) -> str:
     top_pick_count = int(config.get("top_pick_count", 5))
     top_groups = groups[:top_pick_count]
     top_cards = "\n".join(render_topic_card(g, config) for g in top_groups) or "<p>記事がありません。</p>"
-    preferred_categories = ["国内", "AI・テック", "ビジネス", "北海道・函館", "国際", "未分類"]
+    
+preferred_categories = [
+    "日本経済",
+    "米国経済",
+    "ビジネス",
+    "AI・テック",
+    "国内",
+    "北海道・函館",
+    "国際",
+    "未分類"
+]
+
     sections = []
     for category in preferred_categories:
         category_groups = [g for g in groups if g.get("category") == category]
