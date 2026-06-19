@@ -148,36 +148,41 @@
       "国連"
     ]
   },
-  "feeds": [
-    {
-      "name": "NHKニュース",
-      "url": "https://news.web.nhk/n-data/conf/na/rss/cat0.xml",
-      "category": "国内",
-      "trust_score": 15
-    },
-    {
-      "name": "朝日新聞デジタル",
-      "url": "https://rss.asahi.com/rss/asahi/newsheadlines.rdf",
-      "category": "国内",
-      "trust_score": 12
-    },
-    {
-      "name": "ITmedia NEWS",
-      "url": "https://rss.itmedia.co.jp/rss/2.0/news_bursts.xml",
-      "category": "AI・テック",
-      "trust_score": 12
-    },
-    {
-      "name": "朝日新聞 経済・マネー",
-      "url": "http://rss.asahi.com/rss/asahi/business.rdf",
-      "category": "日本経済",
-      "trust_score": 12
-    },
-    {
-      "name": "CNBC Economy",
-      "url": "https://www.cnbc.com/id/20910258/device/rss/rss.html",
-      "category": "米国経済",
-      "trust_score": 11
-    }
-  ]
-}
+"feeds": [
+  {
+    "name": "NHKニュース",
+    "url": "https://news.web.nhk/n-data/conf/na/rss/cat0.xml",
+    "category": "国内",
+    "trust_score": 15
+  },
+  {
+    "name": "朝日新聞デジタル",
+    "url": "https://rss.asahi.com/rss/asahi/newsheadlines.rdf",
+    "category": "国内",
+    "trust_score": 12
+  },
+  {
+    "name": "ITmedia NEWS",
+    "url": "https://rss.itmedia.co.jp/rss/2.0/news_bursts.xml",
+    "category": "AI・テック",
+    "trust_score": 12
+  },
+  {
+    "name": "日経ニュース",
+    "url": "https://assets.wor.jp/rss/rdf/nikkei/news.rdf",
+    "category": "日本経済",
+    "trust_score": 15
+  },
+  {
+    "name": "財経新聞 経済",
+    "url": "https://zaikei.co.jp/rss/economy.rdf",
+    "category": "日本経済",
+    "trust_score": 12
+  },
+  {
+    "name": "Investing 日本",
+    "url": "https://jp.investing.com/rss/news_25.rss",
+    "category": "米国経済",
+    "trust_score": 11
+  }
+]
