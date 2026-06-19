@@ -1,38 +1,105 @@
-"feeds": [
-  {
-    "name": "NHKニュース",
-    "url": "https://news.web.nhk/n-data/conf/na/rss/cat0.xml",
-    "category": "国内",
-    "trust_score": 15
+{
+  "page_title": "自分用ニュースまとめ",
+  "max_articles": 40,
+  "top_pick_count": 5,
+  "max_topic_groups": 25,
+  "max_articles_per_topic": 5,
+  "request_timeout_seconds": 15,
+  "ai_summary_enabled": true,
+  "aggregate_summary_enabled": true,
+  "ai_model": "gpt-4.1-mini",
+
+  "keywords": [
+    "AI","生成AI","Microsoft","OpenAI","半導体",
+    "北海道","函館",
+    "経済","日本経済","米国経済","アメリカ経済",
+    "物価","セキュリティ","クラウド",
+    "日銀","FRB","FOMC","金利","為替",
+    "円安","円高","ドル","インフレ",
+    "雇用統計","GDP","株価","市場"
+  ],
+
+  "exclude_keywords": ["芸能ゴシップ","占い"],
+
+  "category_rules": {
+
+    "日本経済": [
+      "日銀","円安","円高","日本経済","国内市場",
+      "日本株","東証",
+      "物価","企業物価","消費者物価",
+      "賃上げ","春闘","消費","景気"
+    ],
+
+    "米国経済": [
+      "FRB","FOMC","Fed","ドル",
+      "米国経済","アメリカ経済",
+      "雇用統計","米雇用",
+      "CPI","PCE","インフレ",
+      "NASDAQ","ナスダック","ダウ","S&P",
+      "米国債","利上げ","利下げ"
+    ],
+
+    "AI・テック": [
+      "AI","生成AI","LLM","Microsoft","OpenAI",
+      "Gemini","Claude","半導体","クラウド",
+      "サイバー","セキュリティ","データセンター","IT"
+    ],
+
+    "ビジネス": [
+      "市場","株","株価","決算","企業",
+      "投資","銀行","金融","為替","金利"
+    ],
+
+    "北海道・函館": [
+      "北海道","函館","札幌","道南"
+    ],
+
+    "国内": [
+      "政府","国会","選挙","首相",
+      "制度","裁判","事故"
+    ],
+
+    "国際": [
+      "米国","中国","EU","中東","外交"
+    ]
   },
-  {
-    "name": "朝日新聞デジタル",
-    "url": "https://rss.asahi.com/rss/asahi/newsheadlines.rdf",
-    "category": "国内",
-    "trust_score": 12
-  },
-  {
-    "name": "ITmedia NEWS",
-    "url": "https://rss.itmedia.co.jp/rss/2.0/news_bursts.xml",
-    "category": "AI・テック",
-    "trust_score": 12
-  },
-  {
-    "name": "日経ニュース",
-    "url": "https://assets.wor.jp/rss/rdf/nikkei/news.rdf",
-    "category": "日本経済",
-    "trust_score": 15
-  },
-  {
-    "name": "財経新聞 経済",
-    "url": "https://zaikei.co.jp/rss/economy.rdf",
-    "category": "日本経済",
-    "trust_score": 12
-  },
-  {
-    "name": "Investing 日本",
-    "url": "https://jp.investing.com/rss/news_25.rss",
-    "category": "米国経済",
-    "trust_score": 11
-  }
-]
+
+  "feeds": [
+    {
+      "name": "NHKニュース",
+      "url": "https://news.web.nhk/n-data/conf/na/rss/cat0.xml",
+      "category": "国内",
+      "trust_score": 15
+    },
+    {
+      "name": "朝日新聞デジタル",
+      "url": "https://rss.asahi.com/rss/asahi/newsheadlines.rdf",
+      "category": "国内",
+      "trust_score": 12
+    },
+    {
+      "name": "ITmedia NEWS",
+      "url": "https://rss.itmedia.co.jp/rss/2.0/news_bursts.xml",
+      "category": "AI・テック",
+      "trust_score": 12
+    },
+    {
+      "name": "日経ニュース",
+      "url": "https://assets.wor.jp/rss/rdf/nikkei/news.rdf",
+      "category": "日本経済",
+      "trust_score": 15
+    },
+    {
+      "name": "財経新聞 経済",
+      "url": "https://zaikei.co.jp/rss/economy.rdf",
+      "category": "日本経済",
+      "trust_score": 12
+    },
+    {
+      "name": "Investing 日本",
+      "url": "https://jp.investing.com/rss/news_25.rss",
+      "category": "米国経済",
+      "trust_score": 11
+    }
+  ]
+}
