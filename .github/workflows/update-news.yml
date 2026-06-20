@@ -4,8 +4,7 @@ on:
   workflow_dispatch:
 
   schedule:
-    # GitHub Actions の schedule は取りこぼすことがあるため、毎時2回チャンスを作る
-    - cron: "17 * * * *"
+      - cron: "17 * * * *"
 
   push:
     branches:
