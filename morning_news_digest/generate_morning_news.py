@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 import re
 import sqlite3
 import sys
@@ -14,6 +13,7 @@ from email.utils import parsedate_to_datetime
 from html import escape, unescape
 from pathlib import Path
 from urllib.error import HTTPError, URLError
+
 
 JST = timezone(timedelta(hours=9))
 BASE_DIR = Path(__file__).resolve().parent
@@ -32,33 +32,87 @@ DEFAULT_CONFIG = {
     "max_topic_groups": 25,
     "max_articles_per_topic": 5,
     "request_timeout_seconds": 15,
-    "ai_summary_enabled": True,
-    "aggregate_summary_enabled": True,
-    "ai_model": "gpt-4.1-mini",
+
+    # AIは使わない
+    "ai_summary_enabled": False,
+    "aggregate_summary_enabled": False,
+
     "keywords": [
         "AI", "生成AI", "Microsoft", "OpenAI", "半導体", "北海道", "函館",
         "経済", "日本経済", "米国経済", "アメリカ経済", "物価", "セキュリティ", "クラウド",
         "日銀", "FRB", "FOMC", "金利", "為替", "円安", "円高", "ドル",
         "インフレ", "雇用統計", "GDP", "株価", "市場",
     ],
+
     "exclude_keywords": ["芸能ゴシップ", "占い"],
+
     "category_rules": {
-        "日本経済": ["日本経済", "日銀", "円安", "円高", "日本株", "東証", "国内市場", "企業物価", "消費者物価", "物価", "賃上げ", "春闘", "消費", "景気"],
-        "米国経済": ["米国経済", "アメリカ経済", "FRB", "FOMC", "Fed", "ドル", "雇用統計", "米雇用", "CPI", "PCE", "インフレ", "NASDAQ", "ナスダック", "ダウ", "S&P", "米国債", "利上げ", "利下げ"],
-        "AI・テック": ["AI", "生成AI", "LLM", "Microsoft", "OpenAI", "Gemini", "Claude", "半導体", "クラウド", "サイバー", "セキュリティ", "データセンター", "ロボット", "スマートフォン", "Android", "iPhone", "アプリ", "IT"],
-        "ビジネス": ["市場", "株", "株価", "決算", "企業", "投資", "銀行", "金融", "為替", "金利"],
-        "北海道・函館": ["北海道", "函館", "札幌", "道南", "渡島", "檜山", "知床", "旭川", "小樽"],
-        "国内": ["政府", "国会", "選挙", "首相", "省", "庁", "自治体", "制度", "法案", "裁判", "警察", "事故"],
-        "国際": ["米国", "中国", "韓国", "ロシア", "欧州", "EU", "中東", "ウクライナ", "外交", "国連"],
+        "日本経済": [
+            "日本経済", "日銀", "円安", "円高", "日本株", "東証", "国内市場",
+            "企業物価", "消費者物価", "物価", "賃上げ", "春闘", "消費", "景気"
+        ],
+        "米国経済": [
+            "米国経済", "アメリカ経済", "FRB", "FOMC", "Fed", "ドル",
+            "雇用統計", "米雇用", "CPI", "PCE", "インフレ", "NASDAQ",
+            "ナスダック", "ダウ", "S&P", "米国債", "利上げ", "利下げ"
+        ],
+        "AI・テック": [
+            "AI", "生成AI", "LLM", "Microsoft", "OpenAI", "Gemini", "Claude",
+            "半導体", "クラウド", "サイバー", "セキュリティ", "データセンター",
+            "ロボット", "スマートフォン", "Android", "iPhone", "アプリ", "IT"
+        ],
+        "ビジネス": [
+            "市場", "株", "株価", "決算", "企業", "投資", "銀行", "金融",
+            "為替", "金利"
+        ],
+        "北海道・函館": [
+            "北海道", "函館", "札幌", "道南", "渡島", "檜山", "知床",
+            "旭川", "小樽"
+        ],
+        "国内": [
+            "政府", "国会", "選挙", "首相", "省", "庁", "自治体",
+            "制度", "法案", "裁判", "警察", "事故"
+        ],
+        "国際": [
+            "米国", "中国", "韓国", "ロシア", "欧州", "EU", "中東",
+            "ウクライナ", "外交", "国連"
+        ],
     },
+
     "feeds": [
-        {"name": "NHKニュース", "url": "https://news.web.nhk/n-data/conf/na/rss/cat0.xml", "category": "国内", "trust_score": 15},
-        {"name": "朝日新聞デジタル", "url": "https://rss.asahi.com/rss/asahi/newsheadlines.rdf", "category": "国内", "trust_score": 12},
-        {"name": "ITmedia NEWS", "url": "https://rss.itmedia.co.jp/rss/2.0/news_bursts.xml", "category": "AI・テック", "trust_score": 12},
-        {"name": "朝日新聞 経済・マネー", "url": "http://rss.asahi.com/rss/asahi/business.rdf", "category": "日本経済", "trust_score": 12},
-        {"name": "CNBC Economy", "url": "https://www.cnbc.com/id/20910258/device/rss/rss.html", "category": "米国経済", "trust_score": 11},
+        {
+            "name": "NHKニュース",
+            "url": "https://news.web.nhk/n-data/conf/na/rss/cat0.xml",
+            "category": "国内",
+            "trust_score": 15
+        },
+        {
+            "name": "朝日新聞デジタル",
+            "url": "https://rss.asahi.com/rss/asahi/newsheadlines.rdf",
+            "category": "国内",
+            "trust_score": 12
+        },
+        {
+            "name": "ITmedia NEWS",
+            "url": "https://rss.itmedia.co.jp/rss/2.0/news_bursts.xml",
+            "category": "AI・テック",
+            "trust_score": 12
+        },
+        {
+            "name": "朝日新聞 経済・マネー",
+            "url": "http://rss.asahi.com/rss/asahi/business.rdf",
+            "category": "日本経済",
+            "trust_score": 12
+        },
+        {
+            "name": "CNBC Economy",
+            "url": "https://www.cnbc.com/id/20910258/device/rss/rss.html",
+            "category": "米国経済",
+            "trust_score": 11
+        },
     ],
 }
+
 
 STOPWORDS = {
     "する", "した", "して", "いる", "ある", "なる", "から", "まで", "より", "など", "ため",
@@ -69,7 +123,10 @@ STOPWORDS = {
 
 def ensure_config() -> dict:
     if not FEEDS_PATH.exists():
-        FEEDS_PATH.write_text(json.dumps(DEFAULT_CONFIG, ensure_ascii=False, indent=2), encoding="utf-8")
+        FEEDS_PATH.write_text(
+            json.dumps(DEFAULT_CONFIG, ensure_ascii=False, indent=2),
+            encoding="utf-8"
+        )
         print(f"feeds.json がなかったため、サンプルを作成しました: {FEEDS_PATH}")
 
     with FEEDS_PATH.open("r", encoding="utf-8") as f:
@@ -77,6 +134,11 @@ def ensure_config() -> dict:
 
     merged = DEFAULT_CONFIG.copy()
     merged.update(user_config)
+
+    # 既存の feeds.json に AI有効設定が残っていても、ここで必ず無効化する
+    merged["ai_summary_enabled"] = False
+    merged["aggregate_summary_enabled"] = False
+
     return merged
 
 
@@ -89,7 +151,13 @@ def normalize_text(text: str | None) -> str:
 
 def clean_description(text: str | None) -> str:
     text = normalize_text(text)
-    for pattern in [r"続きを読む。?$", r"詳しくはこちら。?$", r"詳細はこちら。?$", r"もっと見る。?$", r"この記事は.*?$"]:
+    for pattern in [
+        r"続きを読む。?$",
+        r"詳しくはこちら。?$",
+        r"詳細はこちら。?$",
+        r"もっと見る。?$",
+        r"この記事は.*?$",
+    ]:
         text = re.sub(pattern, "", text).strip()
     return text
 
@@ -98,41 +166,7 @@ def ends_with_ellipsis(text: str) -> bool:
     return text.rstrip().endswith(ELLIPSIS_SUFFIXES)
 
 
-def normalize_ai_sentence(text: str) -> str:
-    return re.sub(r"\s+", " ", str(text or "").strip()).strip(" \"'「」")
-
-
-def ai_sentence_is_complete(text: str) -> bool:
-    text = normalize_ai_sentence(text)
-    return bool(text) and not ends_with_ellipsis(text) and text.endswith(SENTENCE_ENDINGS)
-
-
-def normalize_confidence(value: str) -> str:
-    value = str(value or "").strip().lower()
-    if value in {"high", "medium", "low"}:
-        return value
-    if "高" in value:
-        return "high"
-    if "低" in value:
-        return "low"
-    return "medium"
-
-
-def confidence_label(value: str) -> str:
-    return {"high": "高", "medium": "中", "low": "低"}.get(normalize_confidence(value), "中")
-
-
-def looks_untranslated_english(text: str) -> bool:
-    text = str(text or "").strip()
-    if not text:
-        return False
-    if re.search(r"[ぁ-んァ-ン一-龥]", text):
-        return False
-    alpha_count = len(re.findall(r"[A-Za-z]", text))
-    return alpha_count >= 20
-
-
-def trim_excerpt(text: str, max_length: int = 160) -> str:
+def trim_excerpt(text: str, max_length: int = 180) -> str:
     text = re.sub(r"\s+", " ", text.strip())
     if len(text) <= max_length:
         return text
@@ -143,6 +177,7 @@ def trim_excerpt(text: str, max_length: int = 160) -> str:
 def parse_date(value: str) -> datetime:
     if not value:
         return datetime.now(JST)
+
     try:
         dt = parsedate_to_datetime(value)
         if dt.tzinfo is None:
@@ -150,6 +185,7 @@ def parse_date(value: str) -> datetime:
         return dt.astimezone(JST)
     except Exception:
         pass
+
     try:
         return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(JST)
     except Exception:
@@ -194,9 +230,9 @@ def classify_category(title: str, description: str, default: str, config: dict) 
         return "日本経済"
 
     us_terms = [
-        "米国経済", "アメリカ経済", "frb", "fomc", "fed", "ドル", "米雇用", "雇用統計",
-        "米cpi", "cpi", "pce", "インフレ", "nasdaq", "ナスダック", "dow", "ダウ",
-        "s&p", "treasury", "米国債", "利下げ", "利上げ",
+        "米国経済", "アメリカ経済", "frb", "fomc", "fed", "ドル", "米雇用",
+        "雇用統計", "米cpi", "cpi", "pce", "インフレ", "nasdaq", "ナスダック",
+        "dow", "ダウ", "s&p", "treasury", "米国債", "利下げ", "利上げ",
     ]
     if any(term.lower() in text for term in us_terms):
         return "米国経済"
@@ -204,11 +240,20 @@ def classify_category(title: str, description: str, default: str, config: dict) 
     for category, words in config.get("category_rules", {}).items():
         if any(word.lower() in text for word in words):
             return category
+
     return default or "未分類"
 
 
-def score_article(title: str, description: str, category: str, published_dt: datetime, feed: dict, config: dict) -> int:
+def score_article(
+    title: str,
+    description: str,
+    category: str,
+    published_dt: datetime,
+    feed: dict,
+    config: dict,
+) -> int:
     text = f"{title} {description}".lower()
+
     score = 30
     score += sum(15 for kw in config.get("keywords", []) if kw.lower() in text)
     score -= sum(40 for kw in config.get("exclude_keywords", []) if kw.lower() in text)
@@ -227,32 +272,46 @@ def score_article(title: str, description: str, category: str, published_dt: dat
         score += 10
     elif age_hours <= 72:
         score += 3
+
     return max(0, min(100, score))
 
 
 def make_simple_summary(title: str, description: str, category: str) -> tuple[str, str]:
     desc = clean_description(description)
-    summary = trim_excerpt(desc, max_length=160) if desc else f"『{title}』に関するニュースです。"
+
+    if desc:
+        summary = trim_excerpt(desc, max_length=180)
+    else:
+        summary = f"『{title}』に関するニュースです。"
+
     why_map = {
         "日本経済": "日本の金利、為替、物価、企業活動に関わるニュースです。",
         "米国経済": "米国の金利、雇用、物価、金融市場に関わるニュースです。",
-        "AI・テック": "情報収集・仕事の自動化・技術トレンドに関わるニュースです。",
+        "AI・テック": "情報収集、仕事の自動化、技術トレンドに関わるニュースです。",
         "ビジネス": "市場や企業活動の変化として、仕事や生活コストに関わるニュースです。",
-        "北海道・函館": "地域の生活・移動・イベント・行政情報として確認する価値があります。",
+        "北海道・函館": "地域の生活、移動、イベント、行政情報として確認する価値があります。",
         "国内": "国内情勢や制度変更に関係するニュースです。",
-        "国際": "海外情勢や市場・安全保障への波及を確認するニュースです。",
+        "国際": "海外情勢や市場、安全保障への波及を確認するニュースです。",
     }
-    return summary, why_map.get(category, "関心キーワードや生活・仕事への関連度を確認するニュースです。")
+
+    why = why_map.get(category, "関心キーワードや生活・仕事への関連度を確認するニュースです。")
+    return summary, why
 
 
 def parse_feed(xml_bytes: bytes, feed: dict, config: dict) -> list[dict]:
     root = ET.fromstring(xml_bytes)
-    items = root.findall(".//item") or [elem for elem in root.iter() if local_name(elem.tag) == "entry"]
+    items = root.findall(".//item") or [
+        elem for elem in root.iter() if local_name(elem.tag) == "entry"
+    ]
+
     articles = []
+
     for item in items:
         title = normalize_text(find_child_text(item, ["title"]))
         url = normalize_text(find_child_text(item, ["link"]))
-        description = clean_description(find_child_text(item, ["description", "summary", "content", "encoded"]))
+        description = clean_description(
+            find_child_text(item, ["description", "summary", "content", "encoded"])
+        )
         pub_raw = normalize_text(find_child_text(item, ["pubDate", "published", "updated", "date"]))
 
         if not title or not url:
@@ -262,6 +321,7 @@ def parse_feed(xml_bytes: bytes, feed: dict, config: dict) -> list[dict]:
         category = classify_category(title, description, feed.get("category", "未分類"), config)
         score = score_article(title, description, category, published_dt, feed, config)
         summary, why = make_simple_summary(title, description, category)
+
         articles.append(
             {
                 "title": title,
@@ -275,16 +335,20 @@ def parse_feed(xml_bytes: bytes, feed: dict, config: dict) -> list[dict]:
                 "score": score,
             }
         )
+
     return articles
 
 
 def dedupe_articles(articles: list[dict]) -> list[dict]:
     by_key = {}
+
     for article in articles:
         title_key = re.sub(r"\W+", "", article["title"].lower())[:80]
         key = article["url"].strip() or title_key
+
         if key not in by_key or article["score"] > by_key[key]["score"]:
             by_key[key] = article
+
     return list(by_key.values())
 
 
@@ -307,32 +371,42 @@ def token_similarity(a: set[str], b: set[str]) -> float:
 def same_topic(article: dict, group: dict, threshold: float = 0.34) -> bool:
     article_tokens_set = article_tokens(article)
     representative = group["articles"][0]
+
     if article.get("url") == representative.get("url"):
         return True
+
     if article.get("category") == representative.get("category"):
         threshold = 0.30
+
     for existing in group["articles"]:
         if token_similarity(article_tokens_set, article_tokens(existing)) >= threshold:
             return True
+
     title_tokens = tokenize_for_grouping(article.get("title", ""))
     group_title_tokens = set()
+
     for existing in group["articles"]:
         group_title_tokens |= tokenize_for_grouping(existing.get("title", ""))
+
     return len(title_tokens & group_title_tokens) >= 2
 
 
 def group_similar_articles(articles: list[dict], config: dict) -> list[dict]:
     max_articles = int(config.get("max_articles", 40))
     sorted_articles = sorted(articles, key=lambda x: x["score"], reverse=True)[:max_articles]
+
     groups: list[dict] = []
+
     for article in sorted_articles:
         placed = False
+
         for group in groups:
             if same_topic(article, group):
                 group["articles"].append(article)
                 group["score"] = max(group["score"], article["score"]) + min(10, len(group["articles"]) - 1)
                 placed = True
                 break
+
         if not placed:
             groups.append({"articles": [article], "score": article["score"]})
 
@@ -340,187 +414,31 @@ def group_similar_articles(articles: list[dict], config: dict) -> list[dict]:
         group["articles"] = sorted(group["articles"], key=lambda x: x["score"], reverse=True)
         group["sources"] = sorted({a["source"] for a in group["articles"]})
         group["category"] = group["articles"][0].get("category", "未分類")
+        group["aggregate"] = aggregate_fallback(group)
 
     groups = sorted(groups, key=lambda g: (len(g["sources"]), g["score"]), reverse=True)
     return groups[: int(config.get("max_topic_groups", 25))]
-
-
-def extract_json_object(text: str) -> dict:
-    raw = text.strip()
-    raw = re.sub(r"^```(?:json)?", "", raw).strip()
-    raw = re.sub(r"```$", "", raw).strip()
-    start = raw.find("{")
-    end = raw.rfind("}")
-    if start == -1 or end == -1 or end <= start:
-        raise ValueError("JSON object not found in AI response")
-    return json.loads(raw[start : end + 1])
-
-
-def build_aggregate_prompt(group: dict, config: dict, retry: bool = False) -> str:
-    max_articles_per_topic = int(config.get("max_articles_per_topic", 5))
-    articles = group["articles"][:max_articles_per_topic]
-
-    article_lines = []
-    for index, article in enumerate(articles, start=1):
-        article_lines.append(
-            f"""
-記事{index}:
-出典: {article['source']}
-タイトル: {article['title']}
-カテゴリ: {article['category']}
-概要: {article.get('description') or article.get('summary')}
-URL: {article['url']}
-""".strip()
-        )
-
-    retry_note = ""
-    if retry:
-        retry_note = "\n前回の出力で summary が英語のまま、または文が未完でした。summary、why、source_note は必ず自然な日本語の完結文にしてください。"
-
-    return f"""
-以下は同じ、または近い話題として収集された記事です。
-複数ソースを比較し、共通して確認できる事実を優先して総合要約してください。
-必ずJSONのみで返してください。Markdownや説明文は付けないでください。
-
-出力形式:
-{{
-  "headline": "総合見出しを1文で。英語タイトルを活かしてもよい",
-  "summary": "何が起きたかを日本語で1〜2文で",
-  "why": "どのような人・分野にどう影響するかを日本語で具体的に1文で。明確でない場合は空文字",
-  "source_note": "出典の扱いを日本語で短く",
-  "confidence": "high | medium | low"
-}}
-
-条件:
-【言語】
-- headline は元記事の英語タイトルを活かしてもよい。ただし、日本語で自然に要約できる場合は日本語にしてよい
-- summary は必ず日本語で書く
-- 英語記事の summary は、英語の内容を自然な日本語に翻訳して説明する
-- summary に英語本文や英語見出しをそのまま残さない
-- why を出す場合は必ず日本語で書く
-- source_note は必ず日本語で書く
-- CNBC、FRB、FOMC、AI、Microsoft、OpenAI、NASDAQ、S&P 500 などの固有名詞・略語は英語表記のままでよい
-
-【基本方針】
-- 複数ソースで共通して確認できる事実を最優先する
-- 1つのソースにしかない情報は「一部報道では」「○○によると」と表現する
-- RSS概要に書かれていない背景、原因、影響を勝手に補完しない
-- タイトルだけから内容を断定しない
-- 数字、金額、日付、人物名、組織名は入力記事にあるものだけ使う
-- 出典間で内容がずれている場合は、断定せず「報道内容に差があります」と書く
-- 情報が不足している場合は「詳細は記事本文で確認が必要です。」と書く
-
-【headline】
-- 短く、煽らない
-- 最大80文字以内
-- 英語のままでもよい
-- 文末を「…」「...」「⋯」で終えない
-
-【summary】
-- 「何が起きたか」に集中する
-- 必ず日本語で書く
-- 英語記事の場合は和訳したうえで、日本語のニュース要約として自然に説明する
-- 推測や感想を書かない
-- 最大300文字以内
-- 文末を「…」「...」「⋯」で終えない
-- 完結した文にする
-
-【why】
-- 日本語で書く
-- 「誰に」「何が」「どう変わるか」を必ず含める
-- 抽象表現は禁止する
-  - 悪い例: 「重要です」「影響があります」「注目です」
-- 対象はできるだけ具体的に書く
-- 入力情報から明確な影響が読み取れない場合は "" にする
-- 最大300文字以内
-- 空文字でない場合は日本語の完結した文にする
-- 文末を「…」「...」「⋯」で終えない
-
-【source_note】
-- 日本語で書く
-- 出典の扱いを簡潔に説明する
-- 最大120文字以内
-- 文末を「…」「...」「⋯」で終えない
-
-【confidence】
-- high: 複数ソースで同じ主要事実が確認できる
-- medium: 単独ソース、または近い話題だが主要事実は比較的明確
-- low: 情報不足、出典間差異、または同一話題か不確実{retry_note}
-
-記事一覧:
-{chr(10).join(article_lines)}
-""".strip()
-
-
-def call_ai_aggregate_once(client, model: str, group: dict, config: dict, retry: bool = False) -> dict:
-    response = client.responses.create(model=model, input=build_aggregate_prompt(group, config=config, retry=retry))
-    data = extract_json_object(response.output_text)
-    return {
-        "headline": normalize_ai_sentence(data.get("headline", "")),
-        "summary": normalize_ai_sentence(data.get("summary", "")),
-        "why": normalize_ai_sentence(data.get("why", "")),
-        "source_note": normalize_ai_sentence(data.get("source_note", "")),
-        "confidence": normalize_confidence(data.get("confidence", "medium")),
-    }
 
 
 def aggregate_fallback(group: dict) -> dict:
     articles = group["articles"]
     main = articles[0]
     sources = sorted({a["source"] for a in articles})
+
     if len(sources) >= 2:
-        source_note = "複数ソースの記事をもとにした抜粋です。"
+        source_note = "複数ソースの記事をもとにした整理です。"
         confidence = "medium"
     else:
-        source_note = "単独ソースの記事をもとにした抜粋です。"
+        source_note = "単独ソースの記事をもとにした整理です。"
         confidence = "low"
+
     return {
         "headline": main["title"],
         "summary": main.get("summary") or trim_excerpt(main.get("description", ""), 300),
-        "why": "",
+        "why": main.get("why", ""),
         "source_note": source_note,
         "confidence": confidence,
     }
-
-
-def aggregate_summary(group: dict, config: dict) -> dict:
-    if not config.get("aggregate_summary_enabled", True):
-        return aggregate_fallback(group)
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        return aggregate_fallback(group)
-    try:
-        from openai import OpenAI
-        client = OpenAI(api_key=api_key)
-        model = os.environ.get("OPENAI_MODEL") or config.get("ai_model", "gpt-4.1-mini")
-        result = call_ai_aggregate_once(client, model, group, config=config, retry=False)
-
-        required_sentence_fields = ["headline", "summary", "source_note"]
-        needs_retry = not all(ai_sentence_is_complete(result.get(k, "")) for k in required_sentence_fields)
-        needs_retry = needs_retry or looks_untranslated_english(result.get("summary", ""))
-        needs_retry = needs_retry or looks_untranslated_english(result.get("source_note", ""))
-        if result.get("why"):
-            needs_retry = needs_retry or looks_untranslated_english(result.get("why", ""))
-
-        if needs_retry:
-            result = call_ai_aggregate_once(client, model, group, config=config, retry=True)
-
-        if all(ai_sentence_is_complete(result.get(k, "")) for k in required_sentence_fields):
-            result["confidence"] = normalize_confidence(result.get("confidence", "medium"))
-            return result
-
-        print("[warn] 総合AI要約が完結文にならなかったためフォールバックします", file=sys.stderr)
-        return aggregate_fallback(group)
-    except Exception as e:
-        print(f"[warn] 総合AI要約に失敗しました: {e}", file=sys.stderr)
-        return aggregate_fallback(group)
-
-
-def enrich_groups_with_ai(groups: list[dict], config: dict) -> list[dict]:
-    for index, group in enumerate(groups, start=1):
-        group["aggregate"] = aggregate_summary(group, config)
-        print(f"[aggregate-ai] {index}/{len(groups)}: {group['aggregate']['headline'][:60]}")
-    return groups
 
 
 def save_articles(articles: list[dict]) -> None:
@@ -541,10 +459,26 @@ def save_articles(articles: list[dict]) -> None:
             )
             """
         )
+
         now = datetime.now(JST).isoformat(timespec="seconds")
+
         conn.executemany(
             "INSERT OR REPLACE INTO articles VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            [(a["url"], a["title"], a["source"], a["category"], a["published_at"], a["description"], a["summary"], a["why"], a["score"], now) for a in articles],
+            [
+                (
+                    a["url"],
+                    a["title"],
+                    a["source"],
+                    a["category"],
+                    a["published_at"],
+                    a["description"],
+                    a["summary"],
+                    a["why"],
+                    a["score"],
+                    now,
+                )
+                for a in articles
+            ],
         )
 
 
@@ -556,6 +490,21 @@ def score_class(score: int) -> str:
     return "score low"
 
 
+def normalize_confidence(value: str) -> str:
+    value = str(value or "").strip().lower()
+    if value in {"high", "medium", "low"}:
+        return value
+    if "高" in value:
+        return "high"
+    if "低" in value:
+        return "low"
+    return "medium"
+
+
+def confidence_label(value: str) -> str:
+    return {"high": "高", "medium": "中", "low": "低"}.get(normalize_confidence(value), "中")
+
+
 def confidence_class(value: str) -> str:
     return f"confidence {normalize_confidence(value)}"
 
@@ -563,6 +512,7 @@ def confidence_class(value: str) -> str:
 def render_related_links(articles: list[dict], config: dict) -> str:
     max_articles_per_topic = int(config.get("max_articles_per_topic", 5))
     links = []
+
     for article in articles[:max_articles_per_topic]:
         links.append(
             f"""
@@ -573,8 +523,10 @@ def render_related_links(articles: list[dict], config: dict) -> str:
             </li>
             """
         )
+
     if len(articles) > max_articles_per_topic:
         links.append(f"<li>ほか {len(articles) - max_articles_per_topic} 件</li>")
+
     return '<ul class="related">' + "\n".join(links) + "</ul>"
 
 
@@ -589,24 +541,29 @@ def render_topic_card(group: dict, config: dict) -> str:
 
     why_block = ""
     if aggregate.get("why"):
-        why_block = f'<p><strong>影響:</strong> {escape(aggregate["why"])}</p>'
+        why_block = f'<p><strong>見るポイント:</strong> {escape(aggregate["why"])}</p>'
 
     return f"""
     <article class="news">
       <div class="topic-meta">
         <span class="badge">{escape(badge)}</span>
-        <span class="{confidence_class(confidence)}">信頼度: {escape(confidence_label(confidence))}</span>
+        <span class="{confidence_class(confidence)}">整理度: {escape(confidence_label(confidence))}</span>
         <span class="source-inline">{escape(sources)}</span>
       </div>
+
       <div class="title">{escape(aggregate['headline'])}</div>
-      <p><strong>何が起きたか:</strong> {escape(aggregate['summary'])}</p>
+
+      <p><strong>概要:</strong> {escape(aggregate['summary'])}</p>
       {why_block}
+
       <p><strong>出典メモ:</strong> {escape(aggregate['source_note'])}</p>
+
       <div class="source">
         カテゴリ: {escape(group.get('category', '未分類'))} /
         重要度: <span class="{score_class(max_score)}">{max_score}</span> /
         参照記事: {len(articles)}件
       </div>
+
       {render_related_links(articles, config)}
     </article>
     """
@@ -614,14 +571,241 @@ def render_topic_card(group: dict, config: dict) -> str:
 
 def css() -> str:
     return """
-    :root{--bg:#f7f5f0;--paper:#fffefb;--ink:#252525;--muted:#6b665f;--line:#e6e0d6;--accent:#4f7cff;--green:#2f8f5b;--yellow:#b58900;--red:#c64545}
-    html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic UI",Meiryo,sans-serif;line-height:1.7}.app{display:grid;grid-template-columns:280px 1fr;min-height:100vh}aside{padding:28px 20px;border-right:1px solid var(--line);background:var(--paper);position:sticky;top:0;height:100vh;box-sizing:border-box}main{padding:40px clamp(22px,5vw,72px)}.page{max-width:1040px;margin:0 auto}.hero,.card{background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:24px;box-shadow:0 10px 30px rgba(39,33,25,.08);margin-bottom:16px}.nav-item,.nav-button{display:block;width:100%;box-sizing:border-box;padding:8px 10px;color:#38332e;text-decoration:none;border-radius:10px;background:transparent;border:none;text-align:left;font:inherit;cursor:pointer}.nav-item:hover,.nav-button:hover{background:#f0ede6}.nav-divider{height:1px;background:var(--line);margin:12px 0}.pill{display:inline-block;margin:4px;padding:6px 10px;border-radius:999px;background:#f3f0e9;border:1px solid var(--line);font-size:13px}.news{border-left:4px solid var(--accent);padding:14px 16px;background:#fffdf7;border-radius:12px;border:1px solid var(--line);margin:12px 0}.title{font-weight:800;font-size:18px;margin:4px 0 10px}.source{font-size:12px;color:var(--muted);margin-top:8px}.score{font-weight:800;color:var(--green)}.score.mid{color:var(--yellow)}.score.low{color:var(--red)}.topic-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted)}.badge{padding:2px 8px;border-radius:999px;background:#eef3ff;color:#315dcc;border:1px solid #d9e4ff;font-weight:700}.confidence{padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-weight:700}.confidence.high{background:#edf8f1;color:#2f8f5b}.confidence.medium{background:#fff8e5;color:#9a7300}.confidence.low{background:#fff0f0;color:#c64545}.source-inline{color:var(--muted)}.related{margin:10px 0 0 0;padding-left:20px;font-size:13px}.related a{color:#315dcc;text-decoration:none}.related a:hover{text-decoration:underline}.floating-actions{position:fixed;right:18px;bottom:18px;display:flex;gap:8px;z-index:20}.floating-actions button,.floating-actions a{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:10px 14px;box-shadow:0 8px 24px rgba(39,33,25,.16);text-decoration:none;font:inherit;cursor:pointer}.floating-actions button:hover,.floating-actions a:hover{background:#f0ede6}@media(max-width:900px){.app{grid-template-columns:1fr}aside{position:static;height:auto;border-right:none;border-bottom:1px solid var(--line)}.floating-actions{right:12px;bottom:12px}.floating-actions button,.floating-actions a{padding:9px 12px;font-size:14px}}
+    :root{
+      --bg:#f7f5f0;
+      --paper:#fffefb;
+      --ink:#252525;
+      --muted:#6b665f;
+      --line:#e6e0d6;
+      --accent:#4f7cff;
+      --green:#2f8f5b;
+      --yellow:#b58900;
+      --red:#c64545;
+    }
+
+    html{scroll-behavior:smooth}
+
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--ink);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic UI",Meiryo,sans-serif;
+      line-height:1.7;
+    }
+
+    .app{
+      display:grid;
+      grid-template-columns:280px 1fr;
+      min-height:100vh;
+    }
+
+    aside{
+      padding:28px 20px;
+      border-right:1px solid var(--line);
+      background:var(--paper);
+      position:sticky;
+      top:0;
+      height:100vh;
+      box-sizing:border-box;
+    }
+
+    main{
+      padding:40px clamp(22px,5vw,72px);
+    }
+
+    .page{
+      max-width:1040px;
+      margin:0 auto;
+    }
+
+    .hero,.card{
+      background:var(--paper);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:24px;
+      box-shadow:0 10px 30px rgba(39,33,25,.08);
+      margin-bottom:16px;
+    }
+
+    .nav-item{
+      display:block;
+      width:100%;
+      box-sizing:border-box;
+      padding:8px 10px;
+      color:#38332e;
+      text-decoration:none;
+      border-radius:10px;
+      background:transparent;
+      border:none;
+      text-align:left;
+      font:inherit;
+      cursor:pointer;
+    }
+
+    .nav-item:hover{
+      background:#f0ede6;
+    }
+
+    .pill{
+      display:inline-block;
+      margin:4px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:#f3f0e9;
+      border:1px solid var(--line);
+      font-size:13px;
+    }
+
+    .news{
+      border-left:4px solid var(--accent);
+      padding:14px 16px;
+      background:#fffdf7;
+      border-radius:12px;
+      border:1px solid var(--line);
+      margin:12px 0;
+    }
+
+    .title{
+      font-weight:800;
+      font-size:18px;
+      margin:4px 0 10px;
+    }
+
+    .source{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:8px;
+    }
+
+    .score{
+      font-weight:800;
+      color:var(--green);
+    }
+
+    .score.mid{
+      color:var(--yellow);
+    }
+
+    .score.low{
+      color:var(--red);
+    }
+
+    .topic-meta{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .badge{
+      padding:2px 8px;
+      border-radius:999px;
+      background:#eef3ff;
+      color:#315dcc;
+      border:1px solid #d9e4ff;
+      font-weight:700;
+    }
+
+    .confidence{
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      font-weight:700;
+    }
+
+    .confidence.high{
+      background:#edf8f1;
+      color:#2f8f5b;
+    }
+
+    .confidence.medium{
+      background:#fff8e5;
+      color:#9a7300;
+    }
+
+    .confidence.low{
+      background:#fff0f0;
+      color:#c64545;
+    }
+
+    .source-inline{
+      color:var(--muted);
+    }
+
+    .related{
+      margin:10px 0 0 0;
+      padding-left:20px;
+      font-size:13px;
+    }
+
+    .related a{
+      color:#315dcc;
+      text-decoration:none;
+    }
+
+    .related a:hover{
+      text-decoration:underline;
+    }
+
+    .floating-actions{
+      position:fixed;
+      right:18px;
+      bottom:18px;
+      display:flex;
+      gap:8px;
+      z-index:20;
+    }
+
+    .floating-actions button,
+    .floating-actions a{
+      border:1px solid var(--line);
+      background:var(--paper);
+      color:var(--ink);
+      border-radius:999px;
+      padding:10px 14px;
+      box-shadow:0 8px 24px rgba(39,33,25,.16);
+      text-decoration:none;
+      font:inherit;
+      cursor:pointer;
+    }
+
+    .floating-actions button:hover,
+    .floating-actions a:hover{
+      background:#f0ede6;
+    }
+
+    @media(max-width:900px){
+      .app{
+        grid-template-columns:1fr;
+      }
+
+      aside{
+        position:static;
+        height:auto;
+        border-right:none;
+        border-bottom:1px solid var(--line);
+      }
+
+      .floating-actions{
+        right:12px;
+        bottom:12px;
+      }
+
+      .floating-actions button,
+      .floating-actions a{
+        padding:9px 12px;
+        font-size:14px;
+      }
+    }
     """
 
 
 def render_html(groups: list[dict], articles: list[dict], config: dict) -> str:
     now_label = datetime.now(JST).strftime("%Y年%m月%d日 %H:%M")
     title = escape(config.get("page_title", "自分用ニュースまとめ"))
+
     top_pick_count = int(config.get("top_pick_count", 5))
     top_groups = groups[:top_pick_count]
     top_cards = "\n".join(render_topic_card(g, config) for g in top_groups) or "<p>記事がありません。</p>"
@@ -649,37 +833,66 @@ def render_html(groups: list[dict], articles: list[dict], config: dict) -> str:
     }
 
     sections = []
+
     for category in preferred_categories:
         category_groups = [g for g in groups if g.get("category") == category]
         if not category_groups:
             continue
+
         cards = "\n".join(render_topic_card(g, config) for g in category_groups)
         icon = icon_map.get(category, "📰")
-        sections.append(f'<section class="card"><h2>{icon} {escape(category)}</h2>{cards}</section>')
+        sections.append(
+            f'<section class="card"><h2>{icon} {escape(category)}</h2>{cards}</section>'
+        )
 
     source_names = sorted({a["source"] for a in articles})
     source_label = " / ".join(source_names) if source_names else "なし"
+
     return f"""<!doctype html>
 <html lang="ja">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{title}</title><style>{css()}</style></head>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{title}</title>
+  <style>{css()}</style>
+</head>
+
 <body>
   <div class="app">
-
-<aside>
-  <h2>🗞️ ニュースダイジェスト</h2>
-  <a class="nav-item" href="#overview">🏠 概要</a>
-  <a class="nav-item" href="#categories">🗂️ カテゴリ別</a>
-</aside>
+    <aside>
+      <h2>🗞️ ニュースダイジェスト</h2>
+      <a class="nav-item" href="#overview">🏠 概要</a>
+      <a class="nav-item" href="#categories">🗂️ カテゴリ別</a>
+    </aside>
 
     <main>
       <section class="page" id="overview">
-        <div class="hero"><div style="font-size:46px">☕</div><h1>{title}</h1><p>複数RSSから記事を取得し、近い話題を束ねてAIで総合要約しました。</p><span class="pill">📅 生成日時: {escape(now_label)}</span><span class="pill">📰 取得記事: {len(articles)}件</span><span class="pill">🧩 話題グループ: {len(groups)}件</span><span class="pill">🗞️ 出典: {escape(source_label)}</span></div>
-        <h2 id="digest">重要トピック {top_pick_count}</h2><div class="card">{top_cards}</div>
-        <h2 id="categories">カテゴリ別ニュース</h2>{''.join(sections)}
+        <div class="hero">
+          <div style="font-size:46px">☕</div>
+          <h1>{title}</h1>
+          <p>複数RSSから記事を取得し、近い話題を束ねてルールベースで整理しました。</p>
+
+          <span class="pill">📅 生成日時: {escape(now_label)}</span>
+          <span class="pill">📰 取得記事: {len(articles)}件</span>
+          <span class="pill">🧩 話題グループ: {len(groups)}件</span>
+          <span class="pill">🗞️ 出典: {escape(source_label)}</span>
+        </div>
+
+        <h2 id="digest">重要トピック {top_pick_count}</h2>
+        <div class="card">
+          {top_cards}
+        </div>
+
+        <h2 id="categories">カテゴリ別ニュース</h2>
+        {''.join(sections)}
       </section>
     </main>
   </div>
-  <div class="floating-actions"><button type="button" onclick="window.location.reload()">🔄 再読み込み</button><a href="#overview">⬆️ TOP</a></div>
+
+  <div class="floating-actions">
+    <button type="button" onclick="window.location.reload()">🔄 再読み込み</button>
+    <a href="#overview">⬆️ TOP</a>
+  </div>
 </body>
 </html>
 """
@@ -688,31 +901,44 @@ def render_html(groups: list[dict], articles: list[dict], config: dict) -> str:
 def main() -> None:
     config = ensure_config()
     all_articles = []
+
     for feed in config.get("feeds", []):
         name = feed.get("name", "Unknown")
         url = feed.get("url")
+
         if not url:
             print(f"[skip] {name}: URLがありません")
             continue
+
         try:
             print(f"[fetch] {name}: {url}")
-            articles = parse_feed(fetch_url(url, int(config.get("request_timeout_seconds", 15))), feed, config)
+            articles = parse_feed(
+                fetch_url(url, int(config.get("request_timeout_seconds", 15))),
+                feed,
+                config,
+            )
             print(f"       -> {len(articles)}件")
             all_articles.extend(articles)
+
         except (HTTPError, URLError, TimeoutError) as e:
             print(f"[error] {name}: 取得に失敗しました: {e}", file=sys.stderr)
+
         except ET.ParseError as e:
             print(f"[error] {name}: XML/RSSの解析に失敗しました: {e}", file=sys.stderr)
+
         except Exception as e:
             print(f"[error] {name}: 予期しないエラー: {e}", file=sys.stderr)
 
     deduped = sorted(dedupe_articles(all_articles), key=lambda x: x["score"], reverse=True)
     groups = group_similar_articles(deduped, config)
-    groups = enrich_groups_with_ai(groups, config)
+
     save_articles(deduped)
+
     OUTPUT_DIR.mkdir(exist_ok=True)
     HTML_PATH.write_text(render_html(groups, deduped, config), encoding="utf-8")
-    print(f"\n完了: {len(all_articles)}件取得 / {len(deduped)}件保存 / {len(groups)}グループをHTMLに出力")
+
+    print()
+    print(f"完了: {len(all_articles)}件取得 / {len(deduped)}件保存 / {len(groups)}グループをHTMLに出力")
     print(f"HTML: {HTML_PATH}")
     print(f"DB:   {DB_PATH}")
 
