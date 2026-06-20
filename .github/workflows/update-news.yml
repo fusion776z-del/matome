@@ -6,7 +6,6 @@ on:
   schedule:
     # GitHub Actions の schedule は取りこぼすことがあるため、毎時2回チャンスを作る
     - cron: "17 * * * *"
-    - cron: "47 * * * *"
 
   push:
     branches:
