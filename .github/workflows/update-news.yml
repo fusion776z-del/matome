@@ -48,8 +48,6 @@ jobs:
 
       - name: Generate morning news HTML
         working-directory: morning_news_digest
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python generate_morning_news.py
 
       - name: Prepare GitHub Pages files
